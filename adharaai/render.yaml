@@ -1,0 +1,49 @@
+# render.yaml — Deploy AdharaAI to Render.com (free tier)
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: adharaai
+    runtime: python
+    plan: free
+
+    # Build
+    buildCommand: |
+      pip install -r requirements.txt
+      python -m spacy download en_core_web_sm
+
+    # Start
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    # Health check — Render uses this to verify the app is running
+    healthCheckPath: /health
+
+    # Environment variables
+    # Set these in the Render dashboard under Environment → Add environment variable
+    envVars:
+      - key: APP_ENV
+        value: production
+
+      - key: APP_VERSION
+        value: "1.0.0"
+
+      - key: APP_SECRET_KEY
+        generateValue: true        # Render auto-generates a secure random value
+
+      - key: DOCUMENT_TTL_SECONDS
+        value: "300"
+
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "10"
+
+      - key: MAX_FILE_SIZE_MB
+        value: "10"
+
+      - key: ALLOWED_ORIGINS
+        # Replace with your actual frontend URL after deploy
+        value: "https://adharaai.onrender.com"
+
+      # DATABASE_URL — set this manually to a PostgreSQL URL from Render or Supabase
+      # Leave blank to use SQLite (not recommended for production)
+      - key: DATABASE_URL
+        value: ""
