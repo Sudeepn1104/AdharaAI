@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AdharaAI — Legal Document Simplifier</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./AdharaAI — Legal Document Simplifier_files/css2" rel="stylesheet">
+<!-- Fonts  -->
+<link rel="stylesheet" href="./themify-icons-font/themify-icons/themify-icons.css">
+<link rel="stylesheet" href="https://jsdeliver.net/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -57,11 +58,13 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 .up-sub{font-size:13px;color:var(--muted)}
 .up-types{font-size:12px;color:#94A3B8;margin-top:6px}
 
-.file-chip{display:none;align-items:center;gap:10px;margin-top:1rem;padding:12px 14px;background:var(--green-bg);border:1px solid #BBF7D0;border-radius:var(--radius-sm)}
+.file-chip{display:none;align-items:center;gap:12px;margin-top:1rem;padding:12px 14px;background:var(--green-bg);border:1px solid #BBF7D0;border-radius:var(--radius-sm)}
 .file-chip.show{display:flex}
-.file-chip i{font-size:18px;color:var(--green)}
-.file-chip-name{font-size:13px;font-weight:500;color:var(--green);flex:1}
-.file-chip-rm{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px 4px}
+.file-chip-icon{width:34px;height:34px;border-radius:10px;background:#DCFCE7;color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.file-chip-icon i{font-size:17px}
+.file-chip-body{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.file-chip-name{font-size:13px;font-weight:600;color:var(--green);line-height:1.35;word-break:break-word}
+.file-chip-rm{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px 4px;flex-shrink:0}
 .file-chip-rm:hover{color:var(--red)}
 
 .btn-analyze{width:100%;margin-top:1.25rem;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.01em;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -69,6 +72,11 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 .btn-analyze:active:not(:disabled){transform:scale(.99)}
 .btn-analyze:disabled{opacity:.45;cursor:not-allowed}
 .btn-analyze i{font-size:18px}
+
+.consent-row{display:flex;align-items:flex-start;gap:8px;margin-top:1rem;font-size:13px;color:var(--muted);line-height:1.5}
+.consent-row input{margin-top:2px;cursor:pointer}
+.consent-row a{color:var(--navy3);font-weight:600;text-decoration:none}
+.consent-row a:hover{text-decoration:underline}
 
 /* PROGRESS */
 .prog{display:none;margin-top:1.25rem}
@@ -131,6 +139,7 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 .fb-m{background:var(--amber-bg);border-color:var(--amber)}
 .flag-ico{font-size:14px;flex-shrink:0;margin-top:1px}
 .flag-ico-h{color:var(--red)}
+
 .flag-ico-m{color:var(--amber)}
 .flag-reason{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
 .flag-tip{font-size:12px;color:var(--muted);line-height:1.5}
@@ -157,12 +166,12 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 #view-results{display:none}
 @media(prefers-reduced-motion:reduce){.clause-card,.btn-analyze,.prog-bar{transition:none}}
 </style>
-</head>
+
 <body>
 
 <nav>
   <div class="brand">Adhara<span>AI</span></div>
-  <div class="beta-tag">BETA · v1.0</div>
+  <div class="beta-tag">BETA · <v1 class="1">v1.1</v1></div>
 </nav>
 
 <div class="hero">
@@ -174,6 +183,7 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
     <span class="pill">Court notices</span>
     <span class="pill">Employment contracts</span>
     <span class="pill">Government forms</span>
+    <span class="pill">Legal contracts</span>
   </div>
 </div>
 
@@ -184,24 +194,31 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
     <div class="card">
       <div class="upload-body">
         <div class="drop-zone" id="drop-zone">
-          <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" aria-label="Upload legal document"/>
-          <div class="up-icon"><i class="ti ti-file-upload" aria-hidden="true"></i></div>
-          <div class="up-title">Drop your document here</div>
+          <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" aria-label="Upload legal document">
+          <div class="up-icon"><i class="ti ti-pin" aria-hidden="true"></i></div>
+          <div class="up-title">Drag & drop your document here</div>
           <div class="up-sub">or click to browse your files</div>
-          <div class="up-types">PDF · TXT · JPG · PNG &mdash; max 10 MB</div>
+          <div class="up-types">PDF · TXT · JPG · PNG — max 10 MB</div>
         </div>
 
         <div class="file-chip" id="file-chip">
-          <i class="ti ti-file-check" aria-hidden="true"></i>
-          <span class="file-chip-name" id="chip-name"></span>
-          <button class="file-chip-rm" id="remove-file" aria-label="Remove selected file">
-            <i class="ti ti-x" aria-hidden="true"></i>
+          <div class="file-chip-icon" aria-hidden="true"><i class="ti ti-file"></i></div>
+          <div class="file-chip-body">
+            <span class="file-chip-name" id="chip-name"></span>
+          </div>
+          <button title="remove" class="file-chip-rm" id="remove-file" aria-label="Remove selected file">
+            <i class="ti ti-trash" aria-hidden="true"></i>
           </button>
         </div>
 
         <div class="err-box" id="err-box" role="alert"></div>
 
-        <button class="btn-analyze" id="btn-analyze" disabled>
+        <label class="consent-row" for="consent-checkbox">
+          <input type="checkbox" id="consent-checkbox">
+          <span>I accept the <a href="privacy.html">Privacy and Policy</a>.</span>
+        </label>
+
+        <button class="btn-analyze" id="btn-analyze" disabled="">
           <i class="ti ti-sparkles" aria-hidden="true"></i>
           Analyse document
         </button>
@@ -269,6 +286,7 @@ const fileChip=document.getElementById('file-chip');
 const chipName=document.getElementById('chip-name');
 const removeFile=document.getElementById('remove-file');
 const btnAnalyze=document.getElementById('btn-analyze');
+const consentCheckbox=document.getElementById('consent-checkbox');
 const progEl=document.getElementById('prog');
 const progBar=document.getElementById('prog-bar');
 const progLabel=document.getElementById('prog-label');
@@ -284,13 +302,21 @@ function setFile(f){
   selectedFile=f;
   chipName.textContent=f.name;
   fileChip.classList.add('show');
-  btnAnalyze.disabled=false;
+  updateAnalyzeState();
   hideErr();
 }
+function updateAnalyzeState(){
+  btnAnalyze.disabled=!(selectedFile&&consentCheckbox.checked);
+}
 fileInput.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0]);});
+consentCheckbox.addEventListener('change',()=>{
+  updateAnalyzeState();
+  if(consentCheckbox.checked)hideErr();
+});
 removeFile.addEventListener('click',()=>{
   selectedFile=null;fileInput.value='';
-  fileChip.classList.remove('show');btnAnalyze.disabled=true;
+  fileChip.classList.remove('show');
+  updateAnalyzeState();
 });
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('over'));
@@ -312,6 +338,11 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 
 btnAnalyze.addEventListener('click',async()=>{
   if(!selectedFile)return;
+  if(!consentCheckbox.checked){
+    showErr('⚠ Please accept the Privacy and Policy before analysing the document.');
+    updateAnalyzeState();
+    return;
+  }
   btnAnalyze.disabled=true;
   hideErr();
   setProgress(10,'Uploading document…');
@@ -416,7 +447,9 @@ function swTab(btn,showId,hideId){
 
 btnReset.addEventListener('click',()=>{
   selectedFile=null;fileInput.value='';
-  fileChip.classList.remove('show');btnAnalyze.disabled=true;
+  consentCheckbox.checked=false;
+  fileChip.classList.remove('show');
+  updateAnalyzeState();
   clausesGrid.innerHTML='';actionList.innerHTML='';
   actionPanel.style.display='none';hideErr();
   viewResults.style.display='none';
@@ -424,5 +457,4 @@ btnReset.addEventListener('click',()=>{
   window.scrollTo({top:0,behavior:'smooth'});
 });
 </script>
-</body>
-</html>
+
