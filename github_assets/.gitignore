@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Environment variables — NEVER commit this
+.env
+.env.local
+.env.production
+*.env
+
+# Database — contains user-uploaded documents
+*.db
+*.sqlite
+*.sqlite3
+legal_simplifier.db
+
+# ML models — too large for GitHub (use HuggingFace Hub or Git LFS)
+models/
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.pkl
+
+# FAISS index files
+*.faiss
+*.index
+
+# Uploaded documents — may contain sensitive personal legal data
+data/raw/
+data/uploads/
+*.pdf
+*.docx
+
+# Notebooks — checkpoint files
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter
+.jupyter/
