@@ -12,3 +12,4 @@ python-magic==0.4.27
 bleach==6.1.0
 aiofiles==23.2.1
 psutil==5.9.8
+psycopg2-binary==2.9.12
