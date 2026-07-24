@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Privacy Policy — AdharaAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:#F7F4EF;color:#1A1A2E;-webkit-font-smoothing:antialiased}
+  nav{background:#0F1F3D;padding:0 2rem;height:52px;display:flex;align-items:center;justify-content:space-between}
+  .brand{font-size:1.1rem;font-weight:500;color:#fff}.brand span{color:#7EB8F7}
+  nav a{color:#94A3B8;font-size:13px;text-decoration:none}nav a:hover{color:#fff}
+  .wrap{max-width:720px;margin:3rem auto;padding:0 1.5rem 4rem}
+  h1{font-size:2rem;font-weight:600;margin-bottom:.5rem}
+  .updated{font-size:13px;color:#64748B;margin-bottom:2.5rem}
+  .disclaimer{background:#FEF3E2;border:1px solid #FCD34D;border-radius:8px;padding:1rem 1.25rem;margin-bottom:2rem;font-size:14px;line-height:1.6}
+  .disclaimer strong{color:#92540A}
+  h2{font-size:1.1rem;font-weight:600;margin:2rem 0 .75rem}
+  p{font-size:15px;line-height:1.75;color:#374151;margin-bottom:1rem}
+  ul{margin:.5rem 0 1rem 1.25rem}
+  li{font-size:15px;line-height:1.75;color:#374151;margin-bottom:.4rem}
+  .highlight{background:#EFF6FF;border-left:3px solid #3B82F6;padding:.75rem 1rem;border-radius:0 6px 6px 0;margin:1rem 0;font-size:14px;line-height:1.6}
+  footer{text-align:center;font-size:13px;color:#94A3B8;margin-top:3rem;padding-top:1.5rem;border-top:1px solid #DDD9D0}
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand">Adhara<span>AI</span></div>
+  <a href="/">← Back to app</a>
+</nav>
+<div class="wrap">
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: June 2026 · Version 1.0</div>
+
+  <div class="disclaimer">
+    <strong>⚠ Not legal advice.</strong> AdharaAI is a student research project and an AI tool.
+    It does not provide legal advice, legal opinions, or legal representation.
+    Always consult a qualified lawyer before making decisions based on any legal document.
+  </div>
+
+  <h2>1. What we collect</h2>
+  <p>When you upload a document, we temporarily store:</p>
+  <ul>
+    <li>The text content of your uploaded file (for analysis only)</li>
+    <li>The filename and file size</li>
+    <li>The analysis results (clause-level risk flags and simplified text)</li>
+  </ul>
+  <p>We do <strong>not</strong> collect your name, email, IP address (beyond server logs), or any account information.</p>
+
+  <h2>2. How long we keep your data</h2>
+  <div class="highlight">
+    🔒 <strong>Your raw document text is automatically and permanently deleted within 5 minutes of upload</strong> — immediately after analysis is complete, or after 5 minutes if analysis is not triggered.
+  </div>
+  <p>After deletion, we retain only the processed output (simplified clauses and risk flags) linked to an anonymous document ID. This output contains no personally identifying information from your document.</p>
+
+  <h2>3. Who sees your data</h2>
+  <ul>
+    <li>Your document is processed entirely on our server — it is <strong>not sent to any third-party AI service or API</strong></li>
+    <li>No human reads your document</li>
+    <li>We do not sell, share, or transfer your data to any third party</li>
+  </ul>
+
+  <h2>4. Cookies and tracking</h2>
+  <p>AdharaAI does not use cookies, analytics trackers, advertising pixels, or any third-party tracking scripts.</p>
+
+  <h2>5. Your rights</h2>
+  <p>You can request deletion of any analysis results by using the DELETE /api/documents/{id} endpoint or by contacting us. Since we do not collect identifying information, we cannot link results to you unless you provide the document ID.</p>
+
+  <h2>6. Security</h2>
+  <ul>
+    <li>All connections use HTTPS (TLS 1.2+)</li>
+    <li>File uploads are validated for type and size before processing</li>
+    <li>Rate limiting prevents automated abuse</li>
+    <li>Server logs do not contain document content</li>
+  </ul>
+
+  <h2>7. Children</h2>
+  <p>AdharaAI is not directed at children under 13. We do not knowingly collect data from minors.</p>
+
+  <h2>8. Changes</h2>
+  <p>We may update this policy. The date at the top of this page reflects the latest revision.</p>
+
+  <h2>9. Contact</h2>
+  <p>This is a student research project from the Department of Artificial Intelligence &amp; Machine Learning. For questions, open an issue on our GitHub repository.</p>
+
+  <footer>AdharaAI · AIML Department Major Project · Built in Mangaluru 🇮🇳</footer>
+</div>
+</body>
+</html>

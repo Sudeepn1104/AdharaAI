@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AdharaAI — Legal Document Simplifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0F1F3D;--navy2:#1A3260;--navy3:#243F78;
+  --cream:#F7F4EF;--cream2:#EDE9E1;
+  --white:#FFFFFF;
+  --amber:#C97B2A;--amber-bg:#FEF3E2;--amber-text:#92540A;
+  --red:#B91C1C;--red-bg:#FEF2F2;
+  --green:#166534;--green-bg:#F0FDF4;
+  --text:#1A1A2E;--muted:#64748B;--border:#DDD9D0;
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.05);
+}
+body{font-family:var(--sans);background:var(--cream);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-family:var(--serif);font-size:1.2rem;color:#fff;letter-spacing:.01em}
+.brand span{color:#7EB8F7}
+.beta-tag{font-size:10px;font-weight:600;color:#7EB8F7;border:1px solid #7EB8F7;border-radius:4px;padding:2px 7px;letter-spacing:.06em}
+
+/* HERO */
+.hero{background:var(--navy);padding:3.5rem 2rem 3rem;text-align:center}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#7EB8F7;margin-bottom:.75rem}
+.hero h1{font-family:var(--serif);font-size:clamp(1.9rem,5vw,3rem);color:#fff;line-height:1.15;max-width:640px;margin:0 auto 1rem}
+.hero h1 em{font-style:italic;color:#7EB8F7}
+.hero-sub{font-size:1rem;color:#94A3B8;max-width:460px;margin:0 auto;line-height:1.65}
+.hero-pills{display:flex;gap:8px;justify-content:center;margin-top:1.5rem;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:5px 12px;font-size:12px;color:#CBD5E1}
+
+/* LAYOUT */
+.main{max-width:1060px;margin:0 auto;padding:2rem 1.5rem 4rem}
+
+/* CARD */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card+.card,.card+.action-panel,.results-header+.results-body{margin-top:1.25rem}
+
+/* UPLOAD */
+.upload-body{padding:2rem}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative}
+.drop-zone:hover,.drop-zone.over{border-color:var(--navy3);background:#F0F4FF}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.up-icon{width:46px;height:46px;background:var(--navy);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.up-icon i{font-size:22px;color:#7EB8F7}
+.up-title{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.up-sub{font-size:13px;color:var(--muted)}
+.up-types{font-size:12px;color:#94A3B8;margin-top:6px}
+
+.file-chip{display:none;align-items:center;gap:10px;margin-top:1rem;padding:12px 14px;background:var(--green-bg);border:1px solid #BBF7D0;border-radius:var(--radius-sm)}
+.file-chip.show{display:flex}
+.file-chip i{font-size:18px;color:var(--green)}
+.file-chip-name{font-size:13px;font-weight:500;color:var(--green);flex:1}
+.file-chip-rm{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px 4px}
+.file-chip-rm:hover{color:var(--red)}
+
+.btn-analyze{width:100%;margin-top:1.25rem;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.01em;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-analyze:hover:not(:disabled){background:var(--navy2)}
+.btn-analyze:active:not(:disabled){transform:scale(.99)}
+.btn-analyze:disabled{opacity:.45;cursor:not-allowed}
+.btn-analyze i{font-size:18px}
+
+/* PROGRESS */
+.prog{display:none;margin-top:1.25rem}
+.prog.show{display:block}
+.prog-track{height:3px;background:var(--cream2);border-radius:100px;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--navy),#7EB8F7);border-radius:100px;transition:width .45s ease;width:0%}
+.prog-label{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+
+/* HOW IT WORKS */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:1.75rem;padding-top:1.75rem;border-top:1px solid var(--border)}
+@media(max-width:560px){.how{grid-template-columns:1fr}}
+.step{text-align:center}
+.step-n{width:28px;height:28px;background:var(--navy);color:#fff;border-radius:50%;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.step-t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.step-d{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ERROR */
+.err-box{display:none;background:var(--red-bg);border:1px solid #FECACA;border-radius:var(--radius-sm);padding:12px 16px;margin-top:1rem;font-size:13px;color:var(--red)}
+.err-box.show{display:block}
+
+/* RESULTS HEADER */
+.results-header{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.res-fname{font-size:14px;font-weight:600;color:var(--text);flex:1;min-width:180px}
+.res-fname span{font-weight:400;color:var(--muted)}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap}
+.stat-chip{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:600}
+.sc-dot{width:7px;height:7px;border-radius:50%}
+.sc-r{background:var(--red-bg);color:var(--red)}
+.sc-r .sc-dot{background:var(--red)}
+.sc-a{background:var(--amber-bg);color:var(--amber-text)}
+.sc-a .sc-dot{background:var(--amber)}
+.sc-g{background:var(--green-bg);color:var(--green)}
+.sc-g .sc-dot{background:var(--green)}
+
+/* RESULTS GRID */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem}
+@media(max-width:740px){.results-grid{grid-template-columns:1fr}}
+
+/* CLAUSE CARD */
+.clause-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;opacity:0;transform:translateY(10px);transition:opacity .3s ease,transform .3s ease}
+.clause-card.in{opacity:1;transform:translateY(0)}
+.risk-top-bar{height:3px;width:100%}
+.rb-h{background:var(--red)}
+.rb-m{background:var(--amber)}
+.rb-l{background:#22C55E}
+.clause-inner{padding:1.1rem 1.25rem}
+.clause-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.clause-num-lbl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.risk-badge{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:100px}
+.rb-badge-h{background:var(--red-bg);color:var(--red)}
+.rb-badge-m{background:var(--amber-bg);color:var(--amber-text)}
+.rb-badge-l{background:var(--green-bg);color:var(--green)}
+.clause-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:.85rem}
+.ctab{background:none;border:none;border-bottom:2px solid transparent;padding:6px 12px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.ctab.active{color:var(--navy);border-color:var(--navy)}
+.clause-text-view{font-size:13.5px;line-height:1.7;color:var(--text)}
+.clause-text-view.original{color:var(--muted);font-size:13px}
+.flag-box{display:flex;gap:10px;margin-top:.85rem;padding:9px 12px;border-radius:var(--radius-sm);border-left:3px solid transparent}
+.fb-h{background:var(--red-bg);border-color:var(--red)}
+.fb-m{background:var(--amber-bg);border-color:var(--amber)}
+.flag-ico{font-size:14px;flex-shrink:0;margin-top:1px}
+.flag-ico-h{color:var(--red)}
+.flag-ico-m{color:var(--amber)}
+.flag-reason{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.flag-tip{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ACTION PANEL */
+.action-panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.ap-head{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border)}
+.ap-head h3{font-family:var(--serif);font-size:1.15rem;color:var(--navy)}
+.action-item{display:flex;gap:12px;padding:1rem 1.5rem;border-bottom:1px solid var(--border);align-items:flex-start}
+.action-item:last-child{border-bottom:none}
+.action-ico{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai-r{background:var(--red-bg)}
+.ai-a{background:var(--amber-bg)}
+.ai-r i{font-size:14px;color:var(--red)}
+.ai-a i{font-size:14px;color:var(--amber)}
+.action-tip{font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:2px}
+.action-clause{font-size:11px;color:var(--muted)}
+
+/* RESET */
+.btn-reset{display:flex;align-items:center;gap:6px;margin:1.5rem auto 0;padding:10px 20px;background:none;color:var(--navy);border:1.5px solid var(--navy3);border-radius:var(--radius-sm);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
+.btn-reset:hover{background:var(--cream)}
+.btn-reset i{font-size:16px}
+
+#view-results{display:none}
+@media(prefers-reduced-motion:reduce){.clause-card,.btn-analyze,.prog-bar{transition:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">Adhara<span>AI</span></div>
+  <div class="beta-tag">BETA · v1.0</div>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">Indian Legal Documents — Simplified</div>
+  <h1>Understand what you're <em>actually</em> signing</h1>
+  <p class="hero-sub">Upload any rental agreement, court notice, or legal contract. We flag risky clauses and explain every line in plain English — in seconds.</p>
+  <div class="hero-pills">
+    <span class="pill">Rental agreements</span>
+    <span class="pill">Court notices</span>
+    <span class="pill">Employment contracts</span>
+    <span class="pill">Government forms</span>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- ── UPLOAD VIEW ── -->
+  <div id="view-upload">
+    <div class="card">
+      <div class="upload-body">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" aria-label="Upload legal document"/>
+          <div class="up-icon"><i class="ti ti-file-upload" aria-hidden="true"></i></div>
+          <div class="up-title">Drop your document here</div>
+          <div class="up-sub">or click to browse your files</div>
+          <div class="up-types">PDF · TXT · JPG · PNG &mdash; max 10 MB</div>
+        </div>
+
+        <div class="file-chip" id="file-chip">
+          <i class="ti ti-file-check" aria-hidden="true"></i>
+          <span class="file-chip-name" id="chip-name"></span>
+          <button class="file-chip-rm" id="remove-file" aria-label="Remove selected file">
+            <i class="ti ti-x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="err-box" id="err-box" role="alert"></div>
+
+        <button class="btn-analyze" id="btn-analyze" disabled>
+          <i class="ti ti-sparkles" aria-hidden="true"></i>
+          Analyse document
+        </button>
+
+        <div class="prog" id="prog">
+          <div class="prog-track"><div class="prog-bar" id="prog-bar"></div></div>
+          <div class="prog-label" id="prog-label">Uploading…</div>
+        </div>
+
+        <div class="how">
+          <div class="step">
+            <div class="step-n">1</div>
+            <div class="step-t">Upload</div>
+            <div class="step-d">PDF, image, or text — any format your document came in</div>
+          </div>
+          <div class="step">
+            <div class="step-n">2</div>
+            <div class="step-t">Analyse</div>
+            <div class="step-d">Each clause is read and checked against Indian legal standards</div>
+          </div>
+          <div class="step">
+            <div class="step-n">3</div>
+            <div class="step-t">Understand</div>
+            <div class="step-d">Plain-English summary and a personal action checklist</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS VIEW ── -->
+  <div id="view-results">
+    <div class="results-header">
+      <div class="res-fname">Document: <span id="res-fname-display"></span></div>
+      <div class="stat-row">
+        <div class="stat-chip sc-r"><div class="sc-dot"></div><span id="cnt-h">0</span> High risk</div>
+        <div class="stat-chip sc-a"><div class="sc-dot"></div><span id="cnt-m">0</span> Review</div>
+        <div class="stat-chip sc-g"><div class="sc-dot"></div><span id="cnt-l">0</span> Clear</div>
+      </div>
+    </div>
+
+    <div class="results-grid" id="clauses-grid"></div>
+
+    <div class="action-panel" id="action-panel" style="display:none;margin-top:1.25rem">
+      <div class="ap-head"><h3>Your action checklist</h3></div>
+      <div id="action-list"></div>
+    </div>
+
+    <div style="text-align:center">
+      <button class="btn-reset" id="btn-reset">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Analyse another document
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API='http://127.0.0.1:8000';
+let selectedFile=null;
+
+const fileInput=document.getElementById('file-input');
+const dropZone=document.getElementById('drop-zone');
+const fileChip=document.getElementById('file-chip');
+const chipName=document.getElementById('chip-name');
+const removeFile=document.getElementById('remove-file');
+const btnAnalyze=document.getElementById('btn-analyze');
+const progEl=document.getElementById('prog');
+const progBar=document.getElementById('prog-bar');
+const progLabel=document.getElementById('prog-label');
+const errBox=document.getElementById('err-box');
+const viewUpload=document.getElementById('view-upload');
+const viewResults=document.getElementById('view-results');
+const clausesGrid=document.getElementById('clauses-grid');
+const actionPanel=document.getElementById('action-panel');
+const actionList=document.getElementById('action-list');
+const btnReset=document.getElementById('btn-reset');
+
+function setFile(f){
+  selectedFile=f;
+  chipName.textContent=f.name;
+  fileChip.classList.add('show');
+  btnAnalyze.disabled=false;
+  hideErr();
+}
+fileInput.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0]);});
+removeFile.addEventListener('click',()=>{
+  selectedFile=null;fileInput.value='';
+  fileChip.classList.remove('show');btnAnalyze.disabled=true;
+});
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('over'));
+dropZone.addEventListener('drop',e=>{
+  e.preventDefault();dropZone.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f){fileInput.files=e.dataTransfer.files;setFile(f);}
+});
+
+function setProgress(pct,lbl){
+  progEl.classList.add('show');
+  progBar.style.width=pct+'%';
+  progLabel.textContent=lbl;
+}
+function hideProgress(){progEl.classList.remove('show');progBar.style.width='0%';}
+function showErr(msg){errBox.textContent=msg;errBox.classList.add('show');}
+function hideErr(){errBox.classList.remove('show');}
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+btnAnalyze.addEventListener('click',async()=>{
+  if(!selectedFile)return;
+  btnAnalyze.disabled=true;
+  hideErr();
+  setProgress(10,'Uploading document…');
+  try{
+    const form=new FormData();
+    form.append('file',selectedFile);
+    const upRes=await fetch(`${API}/api/upload/`,{method:'POST',body:form});
+    if(!upRes.ok){const e=await upRes.json();throw new Error(e.detail||'Upload failed.');}
+    const upData=await upRes.json();
+    setProgress(50,'Extracting and segmenting clauses…');
+    await delay(350);
+    setProgress(75,'Flagging risks and simplifying language…');
+    const anRes=await fetch(`${API}/api/analyze/${upData.document_id}`,{method:'POST'});
+    if(!anRes.ok){const e=await anRes.json();throw new Error(e.detail||'Analysis failed.');}
+    const data=await anRes.json();
+    setProgress(100,'Done!');
+    await delay(450);
+    hideProgress();
+    renderResults(data,selectedFile.name);
+  }catch(err){
+    hideProgress();
+    showErr('⚠ '+(err.message||'Something went wrong. Is the server running at http://127.0.0.1:8000?'));
+    btnAnalyze.disabled=false;
+  }
+});
+
+function renderResults(data,fname){
+  document.getElementById('res-fname-display').textContent=fname;
+  document.getElementById('cnt-h').textContent=data.high_risk||0;
+  document.getElementById('cnt-m').textContent=data.medium_risk||0;
+  document.getElementById('cnt-l').textContent=data.low_risk||0;
+  clausesGrid.innerHTML='';
+  (data.clauses||[]).forEach((c,i)=>{
+    const card=buildClauseCard(c,i);
+    clausesGrid.appendChild(card);
+    setTimeout(()=>card.classList.add('in'),i*70);
+  });
+  const flagged=(data.clauses||[]).filter(c=>c.risk_level!=='low'&&c.risk_tip);
+  if(flagged.length){
+    actionList.innerHTML='';
+    flagged.forEach(c=>{
+      const d=document.createElement('div');
+      d.className='action-item';
+      const isH=c.risk_level==='high';
+      d.innerHTML=`
+        <div class="action-ico ${isH?'ai-r':'ai-a'}">
+          <i class="ti ${isH?'ti-alert-triangle':'ti-info-circle'}" aria-hidden="true"></i>
+        </div>
+        <div>
+          <div class="action-tip">${c.risk_tip}</div>
+          <div class="action-clause">Clause ${c.number}</div>
+        </div>`;
+      actionList.appendChild(d);
+    });
+    actionPanel.style.display='block';
+  }
+  viewUpload.style.display='none';
+  viewResults.style.display='block';
+  viewResults.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildClauseCard(c,idx){
+  const card=document.createElement('div');
+  card.className='clause-card';
+  const isH=c.risk_level==='high',isM=c.risk_level==='medium';
+  const barCls=isH?'rb-h':isM?'rb-m':'rb-l';
+  const bdgCls=isH?'rb-badge-h':isM?'rb-badge-m':'rb-badge-l';
+  const bdgLbl=isH?'High risk':isM?'Review':'Clear';
+  const simplified=c.simplified||c.simplified_text||c.original;
+  const flagHTML=(c.risk_level!=='low'&&c.risk_reason)?`
+    <div class="flag-box ${isH?'fb-h':'fb-m'}">
+      <i class="ti ${isH?'ti-alert-triangle':'ti-alert-circle'} flag-ico ${isH?'flag-ico-h':'flag-ico-m'}" aria-hidden="true"></i>
+      <div>
+        <div class="flag-reason">${c.risk_reason}</div>
+        ${c.risk_tip?`<div class="flag-tip">${c.risk_tip}</div>`:''}
+      </div>
+    </div>`:'';
+  card.innerHTML=`
+    <div class="risk-top-bar ${barCls}"></div>
+    <div class="clause-inner">
+      <div class="clause-meta">
+        <span class="clause-num-lbl">Clause ${c.number}</span>
+        <span class="risk-badge ${bdgCls}">${bdgLbl}</span>
+      </div>
+      <div class="clause-tabs">
+        <button class="ctab active" onclick="swTab(this,'sp${idx}','or${idx}')">Plain English</button>
+        <button class="ctab" onclick="swTab(this,'or${idx}','sp${idx}')">Original</button>
+      </div>
+      <div id="sp${idx}" class="clause-text-view">${simplified}</div>
+      <div id="or${idx}" class="clause-text-view original" style="display:none">${c.original}</div>
+      ${flagHTML}
+    </div>`;
+  return card;
+}
+
+function swTab(btn,showId,hideId){
+  document.getElementById(showId).style.display='block';
+  document.getElementById(hideId).style.display='none';
+  btn.closest('.clause-tabs').querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+btnReset.addEventListener('click',()=>{
+  selectedFile=null;fileInput.value='';
+  fileChip.classList.remove('show');btnAnalyze.disabled=true;
+  clausesGrid.innerHTML='';actionList.innerHTML='';
+  actionPanel.style.display='none';hideErr();
+  viewResults.style.display='none';
+  viewUpload.style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+</script>
+</body>
+</html>
