@@ -49,6 +49,9 @@ RISK_TEST_CASES = [
      "high", "unilateral amendment"),
 
     # True MEDIUM risk (should be detected)
+    ("No guests shall be permitted to stay overnight without prior written permission from the Landlord on each occasion.",
+     "medium", "guest restriction requiring permission every occasion"),
+
     ("All maintenance and repair costs shall be borne entirely by the Tenant.",
      "medium", "all maintenance on tenant"),
 
