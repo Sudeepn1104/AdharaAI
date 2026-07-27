@@ -17,6 +17,7 @@ import logging
 from backend.models.database import Document, Clause, get_db, wipe_expired_documents
 from backend.services.clause_segmenter import segment_clauses
 from backend.services.risk_flagger import flag_all_clauses_hybrid, get_risk_summary
+from backend.services.simplifier import simplify_all_clauses
 
 logger = logging.getLogger("adharaai")
 router = APIRouter()
@@ -47,6 +48,9 @@ async def analyze_document(document_id: int, db: Session = Depends(get_db)):
             detail="Could not segment this document into clauses. The file may be too short or unstructured.",
         )
 
+    # Add plain-English simplified text to each clause
+    clauses = simplify_all_clauses(clauses)
+
     # Hybrid risk flagging (rules + InLegalBERT)
     try:
         flagged = flag_all_clauses_hybrid(clauses)
@@ -64,7 +68,7 @@ async def analyze_document(document_id: int, db: Session = Depends(get_db)):
             document_id     = doc.id,
             clause_number   = c.get("number"),
             original_text   = c.get("text", ""),
-            simplified_text = None,  # simplification pipeline not yet wired in
+            simplified_text = c.get("simplified_text"),
             clause_type     = c.get("bert_clause_type") or c.get("clause_type"),
             risk_level      = c.get("risk_level"),
             risk_reason     = c.get("risk_reason"),
