@@ -743,7 +743,7 @@ def get_risk_summary(clauses: list) -> dict:
         "overall_risk":     "high" if high > 0 else "medium" if medium > 0 else "low",
     }
 
-    from backend.services.classifier import classify_clause, is_available as bert_available
+from backend.services.classifier import classify_clause, is_available as bert_available
 
 
 def flag_clause_hybrid(clause_text: str) -> dict:
