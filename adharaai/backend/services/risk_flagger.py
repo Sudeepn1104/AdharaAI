@@ -742,3 +742,50 @@ def get_risk_summary(clauses: list) -> dict:
         "avg_confidence":   round(avg_confidence),
         "overall_risk":     "high" if high > 0 else "medium" if medium > 0 else "low",
     }
+
+    from backend.services.classifier import classify_clause, is_available as bert_available
+
+
+def flag_clause_hybrid(clause_text: str) -> dict:
+    """
+    Combine rule-based flagging with InLegalBERT classification.
+    Rules catch known bad patterns with full explanations; BERT catches
+    risk that rules miss. If they disagree on risk level, prefer the
+    higher-risk assessment (safer default for the user).
+    """
+    rule_result = flag_clause(clause_text)
+
+    if not bert_available():
+        return {**rule_result, "bert_used": False}
+
+    bert_result = classify_clause(clause_text)
+
+    risk_order = {"low": 0, "medium": 1, "high": 2}
+    rule_level = rule_result["risk_level"]
+    bert_level = bert_result["risk_level"]
+
+    # If BERT sees higher risk than rules did, escalate but keep the rule's
+    # explanation/tip if it has one; otherwise note it's a BERT-only flag.
+    if risk_order.get(bert_level, 0) > risk_order.get(rule_level, 0):
+        return {
+            "risk_level":  bert_level,
+            "risk_reason": rule_result["risk_reason"] or f"Flagged as {bert_level} risk by AI model (clause type: {bert_result['clause_type']}).",
+            "risk_tip":    rule_result["risk_tip"] or "Review this clause carefully; consider asking for clarification or legal advice.",
+            "confidence":  bert_result["risk_confidence"],
+            "all_flags":   rule_result["all_flags"],
+            "bert_used":   True,
+            "bert_clause_type": bert_result["clause_type"],
+        }
+
+    return {
+        **rule_result,
+        "bert_used": True,
+        "bert_clause_type": bert_result["clause_type"],
+        "bert_risk_level": bert_level,
+        "bert_confidence": bert_result["risk_confidence"],
+    }
+
+
+def flag_all_clauses_hybrid(clauses: list) -> list:
+    """Apply hybrid rule+BERT risk flagging to all clauses."""
+    return [{**c, **flag_clause_hybrid(c["text"])} for c in clauses]
