@@ -27,4 +27,4 @@ Thumbs.db
 .pytest_cache/
 
 # Logs
-*.log
+*.logbackend/models/inlegalbert/
