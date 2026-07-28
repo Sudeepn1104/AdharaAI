@@ -682,6 +682,54 @@ RULES = [
         "requires_not": [],
     },
 
+    # ── HIGH RISK: Court notices ────────────────────────────────────────────
+
+    {
+        "id": "non_appearance_consequence",
+        "pattern": r"(fail(ure)?\s+to\s+appear|non[-\s]?appearance).{0,100}(ex[-\s]?parte|warrant|judgment|decree|proceed)",
+        "level": "high",
+        "reason": "If you don't appear in court as required, the case may proceed without you and a ruling could be made against you.",
+        "tip": "Attend the hearing or send a lawyer on the specified date. Non-appearance can result in an unfavourable ruling without your side being heard.",
+        "confidence": 90,
+        "requires_not": [],
+    },
+    {
+        "id": "property_attachment_risk",
+        "pattern": r"(attach(ment)?|garnishee|seiz(e|ure)).{0,80}(propert(y|ies)|bank\s+account|assets|salary)",
+        "level": "high",
+        "reason": "This notice mentions attachment or seizure of your property, bank accounts, or assets — a serious legal consequence.",
+        "tip": "Consult a lawyer immediately. Attachment orders can freeze your assets before a final judgment is even reached.",
+        "confidence": 89,
+        "requires_not": [],
+    },
+    {
+        "id": "arrest_warrant_mention",
+        "pattern": r"(arrest\s+warrant|non[-\s]?bailable\s+warrant|bailable\s+warrant|warrant\s+of\s+arrest)",
+        "level": "high",
+        "reason": "This notice references an arrest warrant — a serious legal matter requiring immediate attention.",
+        "tip": "Contact a criminal lawyer immediately. Do not ignore any notice mentioning an arrest warrant.",
+        "confidence": 93,
+        "requires_not": [],
+    },
+    {
+        "id": "appeal_deadline_window",
+        "pattern": r"(appeal|revision|review\s+petition).{0,80}(within\s+(\d+)\s+days|limitation\s+period)",
+        "level": "high",
+        "reason": "There is a strict deadline to file an appeal against this order or judgment.",
+        "tip": "Missing the appeal deadline generally forfeits your right to challenge the decision. Consult a lawyer immediately.",
+        "confidence": 87,
+        "requires_not": [],
+    },
+    {
+        "id": "criminal_complaint_notice",
+        "pattern": r"(?=.{0,200}(criminal\s+complaint|\bfir\b|cognizable\s+offence|police\s+station))(?=.{0,200}(summon|notice|appear))",
+        "level": "high",
+        "reason": "This notice relates to a criminal complaint or FIR — this requires more urgent legal attention than a typical civil matter.",
+        "tip": "Consult a criminal lawyer as soon as possible; criminal matters have different procedures and stricter timelines than civil disputes.",
+        "confidence": 88,
+        "requires_not": [],
+    },
+
 ]
 
 
