@@ -235,7 +235,9 @@ RULES = [
         "reason": "You are being asked to give up your legal rights to take action.",
         "tip": "Many statutory rights cannot be waived under Indian law. Have a lawyer review this before signing.",
         "confidence": 93,
-        "requires_not": []
+        # Excludes cases already caught more specifically by waiver_all_courts
+        # (named court types), avoiding duplicate flags for the same clause.
+        "requires_not": [r"consumer\s+court|civil\s+court|legal\s+forum|any\s+court|any\s+forum|tribunal"]
     },
     {
         "id": "waiver_of_rent_control",
