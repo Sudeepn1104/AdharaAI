@@ -116,12 +116,12 @@ RULES = [
     },
     {
         "id": "excessive_deposit",
-        "pattern": r"(security|advance)\s+deposit.{0,80}(rs\.?\s*[\d,]+|rupees).{0,20}(month|months)",
+        "pattern": r"(security|advance)\s+deposit.{0,80}([3-9]|[1-9]\d+)\s*(month|months)",
         "level": "medium",
-        "reason": "Verify this deposit amount. Most states cap security deposits at 2–3 months' rent.",
+        "reason": "This security deposit is 3 or more months' rent. Most states cap security deposits at 2 months.",
         "tip": "Check your state's Rent Control Act for the maximum permissible security deposit.",
-        "confidence": 70,
-        "requires_not": []
+        "confidence": 74,
+        "requires_not": [r"two\s+months?|1\s+month|one\s+month"]
     },
     {
         "id": "deposit_forfeiture",
@@ -547,12 +547,12 @@ RULES = [
 
     {
         "id": "admission_of_liability",
-        "pattern": r"(admit|acknowledge|accept).{0,60}(liability|guilt|fault|responsibility).{0,60}(without\s+prejudice)?",
+        "pattern": r"(admit|acknowledge|accept).{0,40}(liability|guilt|fault).{0,60}(claim|dispute|proceeding|court|lawsuit|allegation)",
         "level": "high",
-        "reason": "This document may contain language where you admit liability or fault — this can be used against you later.",
+        "reason": "This document may contain language where you admit liability or fault in a dispute — this can be used against you later.",
         "tip": "Do not sign any document admitting fault or liability without a lawyer reviewing it first.",
         "confidence": 82,
-        "requires_not": [r"deny|dispute|without\s+admitting"],
+        "requires_not": [r"deny|dispute\s+the|without\s+admitting|for\s+damages\s+caused\s+by\s+them"],
     },
     {
         "id": "ex_parte_risk",
