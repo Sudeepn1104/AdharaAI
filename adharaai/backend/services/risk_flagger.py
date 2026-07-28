@@ -19,6 +19,56 @@ Each rule has:
 import re
 from typing import Optional
 
+# ── Number-word normalization ──────────────────────────────────────────────
+# Converts spelled-out numbers ("ninety days", "twenty-four hours") to
+# digits, purely for rule-matching purposes. Many rules below use \d+
+# patterns and would silently miss word-form numbers without this.
+# NEVER apply this to text shown to the user -- only to the text_lower
+# copy used for regex matching.
+
+_NUMBER_WORDS = {
+    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+    'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19,
+    'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+    'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+}
+_SCALE_WORDS = {'hundred': 100}
+_ALL_NUM_WORDS = set(_NUMBER_WORDS) | set(_SCALE_WORDS) | {'and'}
+_NUM_WORD_ALT = "|".join(sorted(_ALL_NUM_WORDS, key=len, reverse=True))
+_NUMBER_SPAN_RE = re.compile(
+    rf"\b(?:{_NUM_WORD_ALT})(?:[\s-]+(?:{_NUM_WORD_ALT}))*\b",
+    re.IGNORECASE,
+)
+
+
+def _words_to_int(span: str) -> int:
+    tokens = re.split(r"[\s-]+", span.lower())
+    total, current = 0, 0
+    for tok in tokens:
+        if tok == "and":
+            continue
+        elif tok in _SCALE_WORDS:
+            current = (current or 1) * _SCALE_WORDS[tok]
+        elif tok in _NUMBER_WORDS:
+            current += _NUMBER_WORDS[tok]
+    total += current
+    return total
+
+
+def normalize_numbers(text: str) -> str:
+    """Convert spelled-out numbers to digits, for rule-matching only."""
+    def _replace(m):
+        span = m.group(0)
+        value = _words_to_int(span)
+        if value == 0 and span.lower().strip() != "zero":
+            return span
+        return str(value)
+
+    return _NUMBER_SPAN_RE.sub(_replace, text)
+
+
 # ── Rule definitions ──────────────────────────────────────────────────────────
 
 RULES = [
@@ -681,7 +731,7 @@ def flag_clause(clause_text: str) -> dict:
     Flag a single clause. Returns the highest-risk match found.
     All flags are collected and sorted by confidence.
     """
-    text_lower = clause_text.lower()
+    text_lower = normalize_numbers(clause_text.lower())
     all_flags = []
 
     # Layer 1 & 2: rule-based
