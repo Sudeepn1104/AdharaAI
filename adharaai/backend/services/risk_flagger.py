@@ -22,9 +22,6 @@ from typing import Optional
 # ── Rule definitions ──────────────────────────────────────────────────────────
 
 RULES = [
-
-    # ── HIGH RISK: Termination ────────────────────────────────────────────────
-
     {
         "id": "unilateral_termination",
         "pattern": r"(landlord|owner|lessor|employer|company).{0,80}(terminat|cancel|evict|end|discontinue).{0,60}(without\s+notice|immediately|forthwith|at\s+(his|her|its|their)\s+(sole\s+)?discretion)",
@@ -34,6 +31,7 @@ RULES = [
         "confidence": 92,
         "requires_not": [r"mutual\s+(consent|agreement)", r"both\s+parties"]
     },
+
     {
         "id": "no_notice_termination",
         "pattern": r"without\s+(prior\s+)?notice.{0,40}(terminat|vacate|leave|evict)",
@@ -43,6 +41,7 @@ RULES = [
         "confidence": 90,
         "requires_not": [r"in\s+case\s+of\s+(default|breach|non[-\s]?payment)"]
     },
+
     {
         "id": "immediate_eviction",
         "pattern": r"(immediately|forthwith|at\s+once).{0,60}(vacate|leave|evict|remove)",
@@ -53,8 +52,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Deposits ───────────────────────────────────────────────────
-
     {
         "id": "non_refundable_deposit",
         "pattern": r"non[-\s]?refundable",  # matches anywhere in clause
@@ -64,6 +61,7 @@ RULES = [
         "confidence": 95,
         "requires_not": [r"subject\s+to\s+deduction"]
     },
+
     {
         "id": "excessive_deposit",
         "pattern": r"(security|advance)\s+deposit.{0,80}(rs\.?\s*[\d,]+|rupees).{0,20}(month|months)",
@@ -73,6 +71,7 @@ RULES = [
         "confidence": 70,
         "requires_not": []
     },
+
     {
         "id": "deposit_forfeiture",
         "pattern": r"(deposit|advance).{0,60}(forfeit|forfeited|be\s+liable\s+to\s+forfeiture|stand\s+forfeited)",
@@ -83,8 +82,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Lock-in ────────────────────────────────────────────────────
-
     {
         "id": "lockin_over_11_months",
         "pattern": r"lock.{0,5}in.{0,60}(1[2-9]|2\d|3\d)\s*(month|months)",
@@ -94,6 +91,7 @@ RULES = [
         "confidence": 93,
         "requires_not": []
     },
+
     {
         "id": "lockin_penalty",
         "pattern": r"lock.{0,5}in.{0,120}(penalty|damages|liable|pay|deduct|forfeit)",
@@ -104,8 +102,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Penalty clauses ────────────────────────────────────────────
-
     {
         "id": "unlimited_penalty",
         "pattern": r"(penalty|damages|compensation).{0,60}(unlimited|without\s+limit|any\s+and\s+all\s+losses|all\s+losses)",
@@ -115,6 +111,7 @@ RULES = [
         "confidence": 91,
         "requires_not": []
     },
+
     {
         "id": "compound_penalty",
         "pattern": r"(penalty|interest).{0,80}(compound|compounding|per\s+day.{0,30}per\s+month|daily.{0,30}monthly)",
@@ -124,6 +121,7 @@ RULES = [
         "confidence": 87,
         "requires_not": []
     },
+
     {
         "id": "double_penalty",
         "pattern": r"(double|twice|triple|two\s+times?|2x).{0,60}(rent|penalty|amount|deposit)",  # fixed order
@@ -134,8 +132,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Arbitration / Jurisdiction ─────────────────────────────────
-
     {
         "id": "foreign_arbitration",
         "pattern": r"arbitration.{0,80}(outside\s+india|foreign|international\s+arbitration\s+centre|london|singapore|dubai|new\s+york)",
@@ -145,6 +141,7 @@ RULES = [
         "confidence": 94,
         "requires_not": []
     },
+
     {
         "id": "exclusive_jurisdiction_far",
         "pattern": r"(exclusive\s+jurisdiction|courts?\s+of).{0,80}(mumbai|delhi|bangalore|chennai|hyderabad|kolkata)",
@@ -155,8 +152,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Indemnity ──────────────────────────────────────────────────
-
     {
         "id": "unlimited_indemnity",
         "pattern": r"indemnif(y|ication|ied).{0,120}(unlimited|without\s+limit|any\s+and\s+all|whatsoever|howsoever)",
@@ -166,6 +161,7 @@ RULES = [
         "confidence": 90,
         "requires_not": []
     },
+
     {
         "id": "third_party_indemnity",
         "pattern": r"indemnif(y|ication).{0,120}(third.{0,10}part(y|ies)|claims?\s+by\s+any\s+person|anyone)",
@@ -176,8 +172,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Waivers ────────────────────────────────────────────────────
-
     {
         "id": "waiver_of_legal_rights",
         "pattern": r"waive[sd]?.{0,80}(legal\s+action|court|proceedings|sue|claim|dispute|remedy|statutory)",  # broader
@@ -187,6 +181,7 @@ RULES = [
         "confidence": 93,
         "requires_not": []
     },
+
     {
         "id": "waiver_of_rent_control",
         "pattern": r"waive[sd]?.{0,60}(rent\s+control|tenant\s+protection|rent\s+act)",
@@ -196,8 +191,6 @@ RULES = [
         "confidence": 91,
         "requires_not": []
     },
-
-    # ── HIGH RISK: Auto-renewal ───────────────────────────────────────────────
 
     {
         "id": "auto_renewal_no_notice",
@@ -209,8 +202,6 @@ RULES = [
         "requires_not": []
     },
 
-    # ── HIGH RISK: Inspection / Entry ─────────────────────────────────────────
-
     {
         "id": "unrestricted_entry",
         "pattern": r"(landlord|owner|lessor|employer).{0,60}(enter|access|inspect).{0,60}(any\s+time|at\s+all\s+times|without\s+(prior\s+)?notice|at\s+(his|her|its)\s+(sole\s+)?discretion)",
@@ -221,8 +212,6 @@ RULES = [
         "requires_not": [r"emergency|fire|flood|urgent\s+repair"]
     },
 
-    # ── MEDIUM RISK: Vague / one-sided language ───────────────────────────────
-
     {
         "id": "sole_discretion",
         "pattern": r"(sole|absolute|unfettered|complete)\s+(discretion|authority|decision)",
@@ -232,6 +221,7 @@ RULES = [
         "confidence": 75,
         "requires_not": [r"mutual\s+(consent|agreement)"]
     },
+
     {
         "id": "as_may_be_required",
         "pattern": r"(such\s+other|any\s+other).{0,40}(obligations?|duties?|responsibilities?).{0,40}(as\s+may\s+be|as\s+(the|any)\s+(landlord|employer|company|party)\s+(may\s+)?deem)",
@@ -241,6 +231,7 @@ RULES = [
         "confidence": 73,
         "requires_not": []
     },
+
     {
         "id": "unilateral_amendment",
         "pattern": r"(landlord|owner|employer|company).{0,60}(amend|modify|change|alter|vary).{0,60}(terms?|conditions?|agreement|contract).{0,60}(without|at\s+(his|her|its)\s+discretion|unilateral)",
@@ -250,6 +241,7 @@ RULES = [
         "confidence": 90,
         "requires_not": [r"written\s+consent\s+of\s+both"]
     },
+
     {
         "id": "stamp_duty_tenant",
         "pattern": r"stamp\s+duty.{0,60}(shall\s+be\s+(borne|paid|payable)\s+by\s+the\s+(tenant|lessee|employee)|entirely\s+by\s+the\s+(tenant|lessee))",
@@ -259,6 +251,7 @@ RULES = [
         "confidence": 80,
         "requires_not": [r"equally|shared|both\s+parties"]
     },
+
     {
         "id": "maintenance_tenant_all",
         "pattern": r"(all|entire|complete).{0,50}(maintenance|repair).{0,80}(tenant|lessee|borne\s+by\s+the\s+tenant)",  # fixed
@@ -268,6 +261,7 @@ RULES = [
         "confidence": 77,
         "requires_not": [r"except\s+(structural|major|external)"]
     },
+
     {
         "id": "interest_on_delayed_rent",
         "pattern": r"interest.{0,60}(\d+\s*%|\d+\s*per\s*cent)",  # any interest with %
@@ -287,6 +281,7 @@ RULES = [
         "confidence": 82,
         "requires_not": [],
     },
+
     {
         "id": "immediate_eviction_pet",
         "pattern": r"(no\s+pets?|pets?\s+prohibited|pets?\s+not\s+allowed).{0,120}(immediate\s+eviction|eviction\s+without\s+notice)",
@@ -296,6 +291,7 @@ RULES = [
         "confidence": 88,
         "requires_not": [],
     },
+
     {
         "id": "blanket_future_amendments",
         "pattern": r"(agree|consent).{0,80}future\s+(amend|modif|change).{0,80}(without\s+consent|deemed\s+fit|discretion)",
@@ -305,6 +301,7 @@ RULES = [
         "confidence": 91,
         "requires_not": [],
     },
+
     {
         "id": "waiver_all_courts",
         "pattern": r"(shall\s+not|must\s+not|not\s+entitled).{0,60}(consumer\s+court|civil\s+court|legal\s+forum|any\s+court|tribunal)",
@@ -314,6 +311,7 @@ RULES = [
         "confidence": 94,
         "requires_not": [],
     },
+
     {
         "id": "vacate_24_hours",
         "pattern": r"vacate.{0,60}24\s*hours?.{0,60}(notice|receiving|landlord)",
@@ -323,6 +321,7 @@ RULES = [
         "confidence": 92,
         "requires_not": [],
     },
+
     {
         "id": "repair_request_delay",
         "pattern": r"(tenant|lessee).{0,60}(30|thirty)\s+days?.{0,60}notice.{0,60}(maintenance|repair)",
@@ -332,6 +331,7 @@ RULES = [
         "confidence": 80,
         "requires_not": [],
     },
+
     {
         "id": "guest_restriction_every_occasion",
         "pattern":r"guests?.{0,100}overnight.{0,100}(each\s+occasion|prior\s+written\s+permission)",
@@ -341,6 +341,7 @@ RULES = [
         "confidence": 78,
         "requires_not": [],
     },
+
     {
         "id": "all_charges_tenant_property_tax",
         "pattern": r"(tenant|lessee).{0,60}(pay|bear|responsible).{0,80}property\s+tax",
@@ -350,6 +351,7 @@ RULES = [
         "confidence": 83,
         "requires_not": [],
     },
+
     {
         "id": "binding_on_heirs_no_consent",
         "pattern": r"binding.{0,60}(legal\s+heirs?|successors?).{0,60}without.{0,40}(further\s+consent|any\s+consent)",
@@ -362,84 +364,176 @@ RULES = [
 
 
     {
-        "id": "subletting_ban_onerous",
-        "pattern": r"(not|shall\s+not|must\s+not).{0,40}sublet.{0,80}(each\s+(and\s+every\s+)?occasion|every\s+instance|each\s+time)",
+        "id": "excessive_notice_period_employee",
+        "pattern": r"(employee|you).{0,60}(notice\s+period|resign).{0,60}(9[0-9]|1[0-9]{2})\s*days?",
         "level": "medium",
-        "reason": "You need written permission every single time — this is unusually restrictive.",
-        "tip": "Negotiate for a one-time permission or a reasonable subletting clause.",
-        "confidence": 82,
-        "requires_not": [],
-    },
-    {
-        "id": "immediate_eviction_pet",
-        "pattern": r"(no\s+pets?|pets?\s+prohibited|pets?\s+not\s+allowed).{0,120}(immediate\s+eviction|eviction\s+without\s+notice)",
-        "level": "high",
-        "reason": "Having a pet could result in immediate eviction with no warning and no deposit refund.",
-        "tip": "Ask for a warning period of at least 7 days before eviction for minor violations.",
-        "confidence": 88,
-        "requires_not": [],
-    },
-    {
-        "id": "blanket_future_amendments",
-        "pattern": r"(agree|consent).{0,80}future\s+(amend|modif|change).{0,80}(without\s+consent|deemed\s+fit|discretion)",
-        "level": "high",
-        "reason": "You are agreeing in advance to any future changes the landlord makes without being asked.",
-        "tip": "Remove this clause. All amendments must require written consent from both parties.",
-        "confidence": 91,
-        "requires_not": [],
-    },
-    {
-        "id": "waiver_all_courts",
-        "pattern": r"(shall\s+not|must\s+not|not\s+entitled).{0,60}(consumer\s+court|civil\s+court|legal\s+forum|any\s+court|tribunal)",
-        "level": "high",
-        "reason": "You are giving up your right to approach any court for any dispute.",
-        "tip": "This clause is likely unenforceable under Indian law. Consult a lawyer.",
-        "confidence": 94,
-        "requires_not": [],
-    },
-    {
-        "id": "vacate_24_hours",
-        "pattern": r"vacate.{0,60}24\s*hours?.{0,60}(notice|receiving|landlord)",
-        "level": "high",
-        "reason": "You could be required to leave within just 24 hours of receiving notice.",
-        "tip": "24 hours notice is likely illegal under Indian Rent Control Acts. Ask for 30 days minimum.",
-        "confidence": 92,
-        "requires_not": [],
-    },
-    {
-        "id": "repair_request_delay",
-        "pattern": r"(tenant|lessee).{0,60}(30|thirty)\s+days?.{0,60}notice.{0,60}(maintenance|repair)",
-        "level": "medium",
-        "reason": "You must give 30 days advance notice before the landlord is required to fix anything.",
-        "tip": "Negotiate for urgent repairs to be addressed within 48 hours without advance notice.",
-        "confidence": 80,
-        "requires_not": [],
-    },
-    {
-        "id": "guest_restriction_every_occasion",
-        "pattern": r"guests?\s+(not\s+)?permitted.{0,100}overnight.{0,100}(each\s+occasion|prior\s+written\s+permission)",
-        "level": "medium",
-        "reason": "You need written permission from the landlord every time a guest stays overnight.",
-        "tip": "Negotiate for guests to be allowed for up to 7 days without requiring permission.",
+        "reason": "Your required resignation notice period is unusually long, which can trap you in a job you want to leave.",
+        "tip": "60 days is standard for most Indian roles. Negotiate this down or ask for a buyout option.",
         "confidence": 78,
         "requires_not": [],
     },
+
     {
-        "id": "all_charges_tenant_property_tax",
-        "pattern": r"(tenant|lessee).{0,60}(pay|bear|responsible).{0,80}property\s+tax",
+        "id": "non_compete_broad",
+        "pattern": r"(shall\s+not|not\s+permitted|prohibited\s+from).{0,80}(work|employ|engage).{0,80}(competitor|similar\s+business|same\s+industry).{0,80}(any\s+(location|country|state)|worldwide|globally|india)",
+        "level": "high",
+        "reason": "This non-compete clause is broad enough to potentially block you from your entire industry after leaving.",
+        "tip": "Indian courts generally do not enforce broad post-employment non-competes. Consult a lawyer if this is used against you.",
+        "confidence": 85,
+        "requires_not": [],
+    },
+
+    {
+        "id": "salary_withholding_full_notice",
+        "pattern": r"(salary|wages|dues|full\s+and\s+final).{0,80}(withheld|not\s+(be\s+)?released|forfeited).{0,80}(notice\s+period|resignation|clearance)",
+        "level": "high",
+        "reason": "Your salary can be withheld entirely if you don't serve the full notice period, even for dues you've already earned.",
+        "tip": "Earned wages generally cannot be withheld under the Payment of Wages Act. Ask for partial release of dues.",
+        "confidence": 87,
+        "requires_not": [],
+    },
+
+    {
+        "id": "forced_resignation_clause",
+        "pattern": r"(deemed\s+to\s+have\s+resigned|deemed\s+resignation|automatic\s+resignation).{0,80}(absence|non[-\s]?compliance|failure\s+to)",
+        "level": "high",
+        "reason": "You could be treated as having resigned automatically, without any formal process or chance to explain.",
+        "tip": "This bypasses your right to due process before termination. Ask for a formal show-cause step to be added.",
+        "confidence": 89,
+        "requires_not": [],
+    },
+
+    {
+        "id": "unpaid_overtime_mandatory",
+        "pattern": r"(overtime|extra\s+hours|additional\s+hours).{0,80}(no\s+(additional|extra)\s+(pay|compensation)|without\s+(additional\s+)?compensation|unpaid)",
         "level": "medium",
-        "reason": "You are responsible for paying property tax — this is normally the landlord's obligation.",
-        "tip": "Property tax is the landlord's legal responsibility. Ask for this clause to be removed.",
+        "reason": "You may be required to work extra hours without additional pay.",
+        "tip": "Under most state Shops and Establishments Acts, overtime must be compensated at 1.5x-2x the normal rate.",
+        "confidence": 76,
+        "requires_not": [],
+    },
+
+    {
+        "id": "bond_penalty_resignation",
+        "pattern": r"(bond|training\s+cost|penalty).{0,80}(resign|leave|quit).{0,80}(rs\.?\s*[\d,]+|lakh|lakhs)",
+        "level": "high",
+        "reason": "You may owe a large financial penalty if you resign before a set period, tied to training or bond costs.",
+        "tip": "Employment bonds are enforceable only if the amount reflects genuine costs incurred. Ask for an itemized breakdown.",
         "confidence": 83,
         "requires_not": [],
     },
+
     {
-        "id": "binding_on_heirs_no_consent",
-        "pattern": r"binding.{0,60}(legal\s+heirs?|successors?).{0,60}without.{0,40}(further\s+consent|any\s+consent)",
+        "id": "confidentiality_overreach",
+        "pattern": r"confidential(ity)?.{0,100}(perpetuity|indefinitely|forever|no\s+time\s+limit)",
         "level": "medium",
-        "reason": "This agreement automatically applies to your family members without their consent.",
-        "tip": "Ask for a clause stating the agreement is personal and ends when you vacate.",
-        "confidence": 76,
+        "reason": "Your confidentiality obligation has no time limit, extending indefinitely beyond your employment.",
+        "tip": "Ask for a reasonable time limit (e.g. 2-5 years post-employment) on confidentiality obligations.",
+        "confidence": 74,
+        "requires_not": [],
+    },
+
+    # ── NEW BATCH: Rental-specific gaps ────────────────────────────────────────
+
+    {
+        "id": "key_money_non_refundable",
+        "pattern": r"(key\s+money|goodwill\s+(amount|payment)|advance\s+(amount|payment)).{0,80}(non[-\s]?refundable|not\s+refundable)",
+        "level": "high",
+        "reason": "A one-time 'key money' or goodwill payment is being taken with no refund, separate from your security deposit.",
+        "tip": "This practice is often not legally protected. Get a receipt and clarify in writing whether any part is refundable.",
+        "confidence": 80,
+        "requires_not": [],
+    },
+
+    {
+        "id": "no_rent_receipt",
+        "pattern": r"(landlord|owner).{0,60}(not\s+obligated|no\s+obligation|not\s+required).{0,60}(issue|provide|give).{0,30}receipt",
+        "level": "medium",
+        "reason": "The landlord isn't required to give you rent receipts, which could hurt you if you ever need proof of tenancy or for tax purposes.",
+        "tip": "Ask for monthly rent receipts to be made mandatory in the agreement.",
+        "confidence": 72,
+        "requires_not": [],
+    },
+
+    {
+        "id": "utility_disconnection_threat",
+        "pattern": r"(landlord|owner).{0,60}(disconnect|cut\s+off|stop).{0,60}(electricity|water|utilit)",
+        "level": "high",
+        "reason": "The landlord may be permitted to cut off your electricity or water supply as a way to force compliance.",
+        "tip": "Disconnecting essential utilities to force a tenant out is illegal in most Indian states, regardless of what the agreement says.",
+        "confidence": 90,
+        "requires_not": [],
+    },
+
+    {
+        "id": "unregistered_lockin_risk",
+        "pattern": r"(agreement|lease).{0,60}(not\s+(be\s+)?registered|unregistered).{0,80}(1[2-9]|2\d|3\d)\s*(month|months|year|years)",
+        "level": "medium",
+        "reason": "This agreement runs longer than 11 months but states it won't be registered, which can weaken your legal standing in a dispute.",
+        "tip": "Agreements over 11 months should legally be registered at the Sub-Registrar's office to be fully enforceable.",
+        "confidence": 79,
+        "requires_not": [],
+    },
+
+    {
+        "id": "broker_fee_tenant_full",
+        "pattern": r"(brokerage|broker\s+fee|agent\s+fee).{0,60}(entirely|fully|100\s*%|solely).{0,40}(tenant|lessee)",
+        "level": "low",
+        "reason": "You are bearing the full brokerage fee, which in some markets is customarily split with the landlord.",
+        "tip": "Brokerage split norms vary by city — check local convention before accepting full liability.",
+        "confidence": 60,
+        "requires_not": [],
+    },
+
+    {
+        "id": "painting_charges_deduction",
+        "pattern": r"(painting|whitewash).{0,60}(charges?|cost).{0,60}(deduct|adjust).{0,40}(deposit|advance)",
+        "level": "low",
+        "reason": "Painting or whitewash charges will be deducted from your deposit regardless of the property's actual condition.",
+        "tip": "Ask for deductions to be based on actual documented damage, not a flat mandatory charge.",
+        "confidence": 65,
+        "requires_not": [],
+    },
+
+    {
+        "id": "pg_no_refund_partial_month",
+        "pattern": r"(paying\s+guest|pg|hostel).{0,80}(no\s+refund|non[-\s]?refundable).{0,60}(partial|part\s+of\s+the\s+month|days\s+remaining)",
+        "level": "medium",
+        "reason": "You won't get any refund for unused days if you leave partway through a month.",
+        "tip": "Ask for pro-rated refunds for the unused portion of any paid period.",
+        "confidence": 70,
+        "requires_not": [],
+    },
+
+    # ── NEW BATCH: Court notice / general legal risks ──────────────────────────
+
+    {
+        "id": "admission_of_liability",
+        "pattern": r"(admit|acknowledge|accept).{0,60}(liability|guilt|fault|responsibility).{0,60}(without\s+prejudice)?",
+        "level": "high",
+        "reason": "This document may contain language where you admit liability or fault — this can be used against you later.",
+        "tip": "Do not sign any document admitting fault or liability without a lawyer reviewing it first.",
+        "confidence": 82,
+        "requires_not": [r"deny|dispute|without\s+admitting"],
+    },
+
+    {
+        "id": "ex_parte_risk",
+        "pattern": r"ex[-\s]?parte.{0,80}(order|proceed|decree)",
+        "level": "high",
+        "reason": "This notice mentions an ex-parte order — a ruling that can be made against you if you don't respond in time.",
+        "tip": "Respond within the stated deadline. Missing it may result in a decision being made without your side being heard.",
+        "confidence": 88,
+        "requires_not": [],
+    },
+
+    {
+        "id": "limitation_period_warning",
+        "pattern": r"(limitation\s+period|within\s+(30|thirty|15|fifteen|60|sixty)\s+days\s+of\s+(receipt|service)).{0,80}(respond|reply|file|appear)",
+        "level": "high",
+        "reason": "There's a strict legal deadline to respond to this notice — missing it can seriously harm your case.",
+        "tip": "Note the exact deadline and consult a lawyer well before it expires.",
+        "confidence": 85,
         "requires_not": [],
     },
 
