@@ -49,6 +49,9 @@ RISK_TEST_CASES = [
      "high", "unilateral amendment"),
 
     # True MEDIUM risk (should be detected)
+    ("No guests shall be permitted to stay overnight without prior written permission from the Landlord on each occasion.",
+     "medium", "guest restriction requiring permission every occasion"),
+
     ("All maintenance and repair costs shall be borne entirely by the Tenant.",
      "medium", "all maintenance on tenant"),
 
@@ -79,6 +82,21 @@ RISK_TEST_CASES = [
 
     ("This agreement shall commence on 1st July 2026 and shall remain in force for 11 months.",
      "low", "standard 11-month agreement"),
+
+    ("The Tenant shall not sublet without obtaining consent from the Landlord on each and every occasion.",
+     "medium", "subletting ban onerous consent"),
+
+    ("No pets allowed on the premises. Violation shall result in immediate eviction without notice.",
+     "high", "immediate eviction for pet violation"),
+
+    ("The Tenant agrees to all future amendments as deemed fit by the Landlord without requiring further consent.",
+     "high", "blanket future amendments"),
+
+    ("The Tenant shall not approach any consumer court or civil court for any dispute.",
+     "high", "waiver of all courts"),
+
+    ("The Tenant shall vacate the premises within 24 hours of receiving notice from the Landlord.",
+     "high", "24 hours vacate notice"),
 ]
 
 # ── Segmentation test cases ───────────────────────────────────────────────────
