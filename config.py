@@ -26,7 +26,7 @@ class Settings:
     # File uploads
     MAX_FILE_BYTES: int     = int(os.getenv("MAX_FILE_SIZE_MB", "10")) * 1024 * 1024
     ALLOWED_EXTENSIONS: set = set(os.getenv(
-        "ALLOWED_EXTENSIONS", "pdf,txt,png,jpg,jpeg,tiff"
+        "ALLOWED_EXTENSIONS", "pdf,txt,png,jpg,jpeg,tiff,bmp"
     ).split(","))
 
     # MIME types that map to allowed extensions
@@ -36,7 +36,10 @@ class Settings:
         "image/jpeg",
         "image/png",
         "image/tiff",
+        "image/bmp",
     }
+
+    TESSERACT_CMD: str      = os.getenv("TESSERACT_CMD", "tesseract")
 
     # CORS
     ALLOWED_ORIGINS: list   = os.getenv(
