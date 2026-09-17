@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from config import settings
 
 # ── Engine ──────────────────────────────────────────────────────────────────
@@ -25,6 +25,7 @@ connect_args = {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL
 engine = create_engine(settings.DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
+REDACTED_CLAUSE_TEXT = "Original clause removed after analysis for privacy."
 
 
 # ── Models ───────────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ class Document(Base):
 
     doc_type        = Column(String(100), nullable=True)
     char_count      = Column(Integer, nullable=True)
-    created_at      = Column(DateTime, default=datetime.utcnow)
+    created_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     analysed_at     = Column(DateTime, nullable=True)
     expires_at      = Column(DateTime, nullable=True)  # when raw_text gets wiped
 
@@ -81,7 +82,7 @@ def wipe_expired_documents(db):
     Auto-delete raw_text from documents past their TTL.
     Called at the start of each /analyze and /upload request.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     expired = db.query(Document).filter(
         Document.expires_at <= now,
         Document.raw_text_wiped == False,
@@ -93,3 +94,29 @@ def wipe_expired_documents(db):
     if expired:
         db.commit()
     return len(expired)
+
+
+def wipe_expired_documents_from_database():
+    """Run privacy cleanup outside an HTTP request lifecycle."""
+    db = SessionLocal()
+    try:
+        return wipe_expired_documents(db)
+    finally:
+        db.close()
+
+
+def redact_persisted_clause_text():
+    """Remove original clause text saved by application versions before v1.1."""
+    db = SessionLocal()
+    try:
+        redacted = db.query(Clause).filter(
+            Clause.original_text != REDACTED_CLAUSE_TEXT
+        ).update(
+            {Clause.original_text: REDACTED_CLAUSE_TEXT},
+            synchronize_session=False,
+        )
+        if redacted:
+            db.commit()
+        return redacted
+    finally:
+        db.close()
