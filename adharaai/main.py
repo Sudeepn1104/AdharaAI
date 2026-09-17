@@ -10,16 +10,17 @@ Startup order:
   6. Register global exception handlers
 """
 
+import asyncio
 import logging
 import sys
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
-from backend.models.database import init_db
+from backend.models.database import init_db, redact_persisted_clause_text, wipe_expired_documents_from_database
 from backend.middleware.security import SecurityMiddleware
 from backend.routers import upload, analyze, documents, health
 
@@ -40,8 +41,26 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting AdharaAI v{settings.APP_VERSION} [{settings.APP_ENV}]")
     init_db()
     logger.info("Database initialised")
-    yield
-    logger.info("AdharaAI shutting down")
+    redacted = redact_persisted_clause_text()
+    if redacted:
+        logger.info(f"Redacted original text from {redacted} saved clause(s)")
+
+    async def privacy_cleanup_loop():
+        interval = max(1, min(60, settings.DOCUMENT_TTL))
+        while True:
+            await asyncio.sleep(interval)
+            wiped = await asyncio.to_thread(wipe_expired_documents_from_database)
+            if wiped:
+                logger.info(f"Auto-wiped raw text from {wiped} expired document(s)")
+
+    cleanup_task = asyncio.create_task(privacy_cleanup_loop())
+    try:
+        yield
+    finally:
+        cleanup_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await cleanup_task
+        logger.info("AdharaAI shutting down")
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
@@ -67,7 +86,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-Document-Token"],
     allow_credentials=False,
 )
 
@@ -96,6 +115,10 @@ if os.path.exists("frontend"):
     @app.get("/privacy", include_in_schema=False)
     def serve_privacy():
         return FileResponse("frontend/privacy.html")
+
+    @app.get("/privacy.html", include_in_schema=False)
+    def redirect_legacy_privacy_url():
+        return RedirectResponse(url="/privacy", status_code=308)
 
 
 # ── Global error handlers ─────────────────────────────────────────────────────

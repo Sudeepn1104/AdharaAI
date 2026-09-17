@@ -2,6 +2,7 @@ fastapi==0.111.0
 uvicorn[standard]==0.29.0
 python-multipart==0.0.9
 pdfminer.six==20221105
+PyMuPDF==1.28.0
 pytesseract==0.3.10
 Pillow==10.3.0
 spacy==3.7.4

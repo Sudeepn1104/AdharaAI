@@ -1,10 +1,11 @@
 """
 routers/analyze.py — NLP pipeline endpoint with confidence scoring.
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from sqlalchemy.orm import Session
-from datetime import datetime
-from backend.models.database import Document, Clause, get_db, wipe_expired_documents
+from datetime import datetime, timezone
+from backend.models.database import REDACTED_CLAUSE_TEXT, Document, Clause, get_db, wipe_expired_documents
+from backend.services.document_access import require_document_access
 from backend.services.clause_segmenter import segment_clauses
 from backend.services.simplifier import simplify_all_clauses
 from backend.services.risk_flagger import flag_all_clauses, get_risk_summary
@@ -15,7 +16,8 @@ router = APIRouter()
 
 
 @router.post("/{document_id}", summary="Run AI analysis on an uploaded document")
-def analyze_document(document_id: int, db: Session = Depends(get_db)):
+def analyze_document(document_id: int, document_token: str | None = Header(default=None, alias="X-Document-Token"), db: Session = Depends(get_db)):
+    require_document_access(document_id, document_token)
 
     # Privacy housekeeping
     wipe_expired_documents(db)
@@ -59,7 +61,7 @@ def analyze_document(document_id: int, db: Session = Depends(get_db)):
         db.add(Clause(
             document_id     = document_id,
             clause_number   = c["number"],
-            original_text   = c["text"],
+            original_text   = REDACTED_CLAUSE_TEXT,
             simplified_text = c.get("simplified_text"),
             risk_level      = c.get("risk_level", "low"),
             risk_reason     = c.get("risk_reason"),
@@ -70,7 +72,7 @@ def analyze_document(document_id: int, db: Session = Depends(get_db)):
     # Privacy: wipe raw text immediately after successful analysis
     doc.raw_text        = None
     doc.raw_text_wiped  = True
-    doc.analysed_at     = datetime.utcnow()
+    doc.analysed_at     = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
 
     logger.info(
@@ -103,7 +105,8 @@ def analyze_document(document_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{document_id}", summary="Retrieve a previously saved analysis")
-def get_analysis(document_id: int, db: Session = Depends(get_db)):
+def get_analysis(document_id: int, document_token: str | None = Header(default=None, alias="X-Document-Token"), db: Session = Depends(get_db)):
+    require_document_access(document_id, document_token)
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
@@ -127,7 +130,7 @@ def get_analysis(document_id: int, db: Session = Depends(get_db)):
         "clauses": [
             {
                 "number":      c.clause_number,
-                "original":    c.original_text,
+                "original":    None,
                 "simplified":  c.simplified_text,
                 "risk_level":  c.risk_level,
                 "risk_reason": c.risk_reason,

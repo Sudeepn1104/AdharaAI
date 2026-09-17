@@ -3,7 +3,10 @@ text_extractor.py — Secure document text extraction.
 Validates file type by content (magic bytes), not just extension.
 """
 import io
+import os
 import re
+from pathlib import Path
+import fitz
 import pytesseract
 from PIL import Image
 from pdfminer.high_level import extract_text_to_fp
@@ -18,7 +21,9 @@ MAGIC_SIGNATURES = {
     b"\x89PNG\r\n":    "image/png",
     b"II*\x00":        "image/tiff",
     b"MM\x00*":        "image/tiff",
+    b"BM":              "image/bmp",
 }
+MAX_SCANNED_PDF_PAGES = 25
 
 
 def detect_mime(file_bytes: bytes) -> str:
@@ -83,10 +88,16 @@ def extract_from_pdf(file_bytes: bytes) -> str:
     return output.getvalue().strip()
 
 
-def extract_from_image(file_bytes: bytes) -> str:
-    """Extract text from a scanned image using Tesseract OCR."""
+def extract_text_from_image(image: Image.Image) -> str:
+    """Extract text from an already decoded image using Tesseract OCR."""
     try:
-        image = Image.open(io.BytesIO(file_bytes))
+        tesseract_cmd = settings.TESSERACT_CMD
+        if os.name == "nt" and tesseract_cmd == "tesseract":
+            installed_command = Path(os.getenv("ProgramFiles", r"C:\Program Files")) / "Tesseract-OCR" / "tesseract.exe"
+            if installed_command.is_file():
+                tesseract_cmd = str(installed_command)
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+        pytesseract.get_tesseract_version()
         # Upscale small images for better OCR accuracy
         w, h = image.size
         if w < 1000:
@@ -96,8 +107,39 @@ def extract_from_image(file_bytes: bytes) -> str:
         image = image.convert("L")
         text = pytesseract.image_to_string(image, lang="eng", config="--psm 6")
         return text.strip()
+    except pytesseract.TesseractNotFoundError as exc:
+        raise ValueError("Image OCR requires Tesseract. Install it and set TESSERACT_CMD if it is not on PATH.") from exc
     except Exception as e:
         raise ValueError(f"Could not read this image: {e}")
+
+
+def extract_from_image(file_bytes: bytes) -> str:
+    """Extract text from a scanned image using Tesseract OCR."""
+    try:
+        return extract_text_from_image(Image.open(io.BytesIO(file_bytes)))
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Could not read this image: {e}")
+
+
+def extract_from_scanned_pdf(file_bytes: bytes) -> str:
+    """Render a scanned PDF into images and extract text from each page."""
+    try:
+        with fitz.open(stream=file_bytes, filetype="pdf") as document:
+            if not document.page_count:
+                raise ValueError("The PDF does not contain any pages.")
+            if document.page_count > MAX_SCANNED_PDF_PAGES:
+                raise ValueError(f"Scanned PDFs are limited to {MAX_SCANNED_PDF_PAGES} pages.")
+            extracted_pages = []
+            for page in document:
+                pixmap = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+                extracted_pages.append(extract_text_from_image(Image.open(io.BytesIO(pixmap.tobytes("png")))))
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Could not render this scanned PDF: {e}")
+    return "\n\n".join(page for page in extracted_pages if page).strip()
 
 
 def extract_text(filename: str, file_bytes: bytes) -> str:
@@ -113,7 +155,7 @@ def extract_text(filename: str, file_bytes: bytes) -> str:
         text = extract_from_pdf(file_bytes)
         # If digital extraction got almost nothing, it's a scanned PDF
         if len(text.strip()) < 100:
-            return "[Scanned PDF — OCR support coming in v1.1. Please upload a text-based PDF or image for now.]"
+            return extract_from_scanned_pdf(file_bytes)
         return text
 
     elif ext in ("jpg", "jpeg", "png", "tiff", "bmp"):
