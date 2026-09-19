@@ -4,16 +4,12 @@
 services:
   - type: web
     name: adharaai
-    runtime: python
+    runtime: docker
     plan: free
 
-    # Build
-    buildCommand: |
-      pip install -r requirements.txt
-      python -m spacy download en_core_web_sm
-
-    # Start
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    # Docker includes native Tesseract as well as the Python dependencies.
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
 
     # Health check — Render uses this to verify the app is running
     healthCheckPath: /health
