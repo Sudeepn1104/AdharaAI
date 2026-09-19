@@ -684,6 +684,7 @@ RULES = [
         "requires_not": [],
     },
 
+<<<<<<< HEAD
     # ── HIGH RISK: Court notices ────────────────────────────────────────────
 
     {
@@ -732,6 +733,8 @@ RULES = [
         "requires_not": [],
     },
 
+=======
+>>>>>>> origin/data-v3
 ]
 
 
