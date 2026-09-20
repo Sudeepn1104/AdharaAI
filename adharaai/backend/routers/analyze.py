@@ -1,138 +1,148 @@
 """
-routers/analyze.py — NLP pipeline endpoint with confidence scoring.
+routers/analyze.py — Document analysis endpoint.
+
+Flow:
+  1. Fetch the document by ID (must have been uploaded first)
+  2. Segment raw text into clauses
+  3. Risk-flag each clause using the hybrid rule+BERT pipeline
+  4. Save clause-level results to the database
+  5. Wipe raw_text immediately after analysis (privacy-first design)
+  6. Return the analysis summary + clause results
 """
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from datetime import datetime
+import logging
+
 from backend.models.database import Document, Clause, get_db, wipe_expired_documents
 from backend.services.clause_segmenter import segment_clauses
+from backend.services.risk_flagger import flag_all_clauses_hybrid, get_risk_summary
 from backend.services.simplifier import simplify_all_clauses
-from backend.services.risk_flagger import flag_all_clauses, get_risk_summary
-import logging
 
 logger = logging.getLogger("adharaai")
 router = APIRouter()
 
 
-@router.post("/{document_id}", summary="Run AI analysis on an uploaded document")
-def analyze_document(document_id: int, db: Session = Depends(get_db)):
+@router.post("/{document_id}", summary="Analyse an uploaded document")
+async def analyze_document(document_id: int, db: Session = Depends(get_db)):
+    # Auto-clean expired documents (privacy housekeeping)
+    wiped = wipe_expired_documents(db)
+    if wiped:
+        logger.info(f"Auto-wiped raw text from {wiped} expired document(s)")
 
-    # Privacy housekeeping
-    wipe_expired_documents(db)
-
-    # Load document
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail=f"Document {document_id} not found.")
-    if doc.raw_text_wiped or not doc.raw_text:
-        raise HTTPException(
-            status_code=410,
-            detail=(
-                "This document's raw text has been automatically deleted for privacy. "
-                "Please re-upload the file to analyse it again."
-            ),
-        )
-
-    # ── Pipeline ──────────────────────────────────────────────────────────────
-
-    # Step 1: Segment into clauses
-    clauses = segment_clauses(doc.raw_text)
-    if not clauses:
-        raise HTTPException(
-            status_code=422,
-            detail="Could not detect individual clauses in this document. "
-                   "Try uploading a cleaner copy or a text (.txt) version.",
-        )
-
-    # Step 2: Simplify language
-    clauses = simplify_all_clauses(clauses)
-
-    # Step 3: Flag risks with confidence scoring
-    clauses = flag_all_clauses(clauses)
-
-    # ── Persist results ───────────────────────────────────────────────────────
-
-    # Remove previous analysis if re-running
-    db.query(Clause).filter(Clause.document_id == document_id).delete()
-
-    for c in clauses:
-        db.add(Clause(
-            document_id     = document_id,
-            clause_number   = c["number"],
-            original_text   = c["text"],
-            simplified_text = c.get("simplified_text"),
-            risk_level      = c.get("risk_level", "low"),
-            risk_reason     = c.get("risk_reason"),
-            risk_tip        = c.get("risk_tip"),
-            confidence      = c.get("confidence", 100),
-        ))
-
-    # Privacy: wipe raw text immediately after successful analysis
-    doc.raw_text        = None
-    doc.raw_text_wiped  = True
-    doc.analysed_at     = datetime.utcnow()
-    db.commit()
-
-    logger.info(
-        f"Analysed document {document_id}: "
-        f"{len(clauses)} clauses, "
-        f"high={sum(1 for c in clauses if c.get('risk_level')=='high')}"
-    )
-
-    # ── Build response ────────────────────────────────────────────────────────
-    summary = get_risk_summary(clauses)
-
-    return {
-        **summary,
-        "document_id": document_id,
-        "filename":    doc.filename,
-        "clauses": [
-            {
-                "number":      c["number"],
-                "original":    c["text"],
-                "simplified":  c.get("simplified_text"),
-                "risk_level":  c.get("risk_level", "low"),
-                "risk_reason": c.get("risk_reason"),
-                "risk_tip":    c.get("risk_tip"),
-                "confidence":  c.get("confidence", 100),
-                "all_flags":   c.get("all_flags", []),
-            }
-            for c in clauses
-        ],
-    }
-
-
-@router.get("/{document_id}", summary="Retrieve a previously saved analysis")
-def get_analysis(document_id: int, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
 
-    clauses = (
-        db.query(Clause)
-        .filter(Clause.document_id == document_id)
-        .order_by(Clause.clause_number)
-        .all()
-    )
-    if not clauses:
+    if doc.raw_text_wiped or not doc.raw_text:
         raise HTTPException(
-            status_code=404,
-            detail="No analysis found for this document. Run POST /api/analyze/{id} first.",
+            status_code=410,
+            detail="This document's text has already been wiped (privacy TTL). Please upload again.",
         )
 
+    # Segment into clauses
+    clauses = segment_clauses(doc.raw_text)
+    if not clauses:
+        raise HTTPException(
+            status_code=422,
+            detail="Could not segment this document into clauses. The file may be too short or unstructured.",
+        )
+
+    # Add plain-English simplified text to each clause
+    clauses = simplify_all_clauses(clauses)
+
+    # Hybrid risk flagging (rules + InLegalBERT)
+    try:
+        flagged = flag_all_clauses_hybrid(clauses)
+    except Exception as e:
+        logger.error(f"Hybrid flagging failed, falling back to rules only: {e}", exc_info=True)
+        from backend.services.risk_flagger import flag_all_clauses
+        flagged = flag_all_clauses(clauses)
+
+    summary = get_risk_summary(flagged)
+
+    # Save clause-level results
+    saved_clauses = []
+    for c in flagged:
+        clause_row = Clause(
+            document_id     = doc.id,
+            clause_number   = c.get("number"),
+            original_text   = c.get("text", ""),
+            simplified_text = c.get("simplified_text"),
+            clause_type     = c.get("bert_clause_type") or c.get("clause_type"),
+            risk_level      = c.get("risk_level"),
+            risk_reason     = c.get("risk_reason"),
+            risk_tip        = c.get("risk_tip"),
+            confidence      = c.get("confidence"),
+        )
+        db.add(clause_row)
+        saved_clauses.append(clause_row)
+
+    # Mark document as analysed and wipe raw text (privacy-first)
+    doc.analysed_at    = datetime.utcnow()
+    doc.raw_text        = None
+    doc.raw_text_wiped  = True
+
+    db.commit()
+    for c in saved_clauses:
+        db.refresh(c)
+
+    logger.info(
+        f"Document {doc.id} analysed: {len(flagged)} clauses, "
+        f"overall_risk={summary['overall_risk']}"
+    )
+
     return {
-        "document_id": document_id,
+        "document_id": doc.id,
         "filename":    doc.filename,
-        "analysed_at": doc.analysed_at.isoformat() if doc.analysed_at else None,
+        "summary":     summary,
         "clauses": [
             {
-                "number":      c.clause_number,
-                "original":    c.original_text,
-                "simplified":  c.simplified_text,
-                "risk_level":  c.risk_level,
-                "risk_reason": c.risk_reason,
-                "risk_tip":    c.risk_tip,
-                "confidence":  c.confidence,
+                "id":              c.id,
+                "clause_number":   c.clause_number,
+                "original_text":   c.original_text,
+                "simplified_text": c.simplified_text,
+                "clause_type":     c.clause_type,
+                "risk_level":      c.risk_level,
+                "risk_reason":     c.risk_reason,
+                "risk_tip":        c.risk_tip,
+                "confidence":      c.confidence,
+            }
+            for c in saved_clauses
+        ],
+    }
+
+
+@router.get("/{document_id}", summary="Get previously analysed results for a document")
+async def get_analysis(document_id: int, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    clauses = db.query(Clause).filter(Clause.document_id == document_id).order_by(Clause.clause_number).all()
+    if not clauses:
+        raise HTTPException(status_code=404, detail="No analysis found for this document. Call POST first.")
+
+    summary = get_risk_summary([
+        {"risk_level": c.risk_level, "confidence": c.confidence} for c in clauses
+    ])
+
+    return {
+        "document_id": doc.id,
+        "filename":    doc.filename,
+        "analysed_at": doc.analysed_at.isoformat() if doc.analysed_at else None,
+        "summary":     summary,
+        "clauses": [
+            {
+                "id":              c.id,
+                "clause_number":   c.clause_number,
+                "original_text":   c.original_text,
+                "simplified_text": c.simplified_text,
+                "clause_type":     c.clause_type,
+                "risk_level":      c.risk_level,
+                "risk_reason":     c.risk_reason,
+                "risk_tip":        c.risk_tip,
+                "confidence":      c.confidence,
             }
             for c in clauses
         ],
