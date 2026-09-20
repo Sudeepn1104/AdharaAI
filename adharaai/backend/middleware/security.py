@@ -67,6 +67,6 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # ── 4. Request logging (no PII logged) ───────────────────────────────
         logger.info(
             f"{request.method} {request.url.path} "
-            f"→ {response.status_code} ({duration}ms)"
+            f"-> {response.status_code} ({duration}ms)"
         )
         return response
