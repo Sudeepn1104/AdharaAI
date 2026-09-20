@@ -67,18 +67,37 @@ def _load_model():
         # The trained risk_head / type_head weights live in model.safetensors
         # too, but nothing loads them unless we do it explicitly here.
         weights_path = os.path.join(MODEL_PATH, "model.safetensors")
-        if os.path.exists(weights_path):
-            state_dict = load_file(weights_path)
-            missing, unexpected = _model.load_state_dict(state_dict, strict=False)
-            logger.info(
-                f"Loaded full InLegalBERT state dict from {weights_path} "
-                f"(missing: {missing}, unexpected: {unexpected})"
+        if not os.path.exists(weights_path):
+            logger.error(
+                f"No model.safetensors found at {weights_path} — "
+                f"refusing to serve BERT predictions with untrained heads. Using rules only."
+            )
+            _model = None
+            return False
+
+        state_dict = load_file(weights_path)
+        missing, unexpected = _model.load_state_dict(state_dict, strict=False)
+
+        # risk_head/type_head must load cleanly — if either is missing, the
+        # model would silently predict from randomly-initialized heads.
+        critical_missing = [
+            k for k in missing if k.startswith("risk_head") or k.startswith("type_head")
+        ]
+        if critical_missing:
+            logger.error(
+                f"Critical weights missing from checkpoint: {critical_missing}. "
+                f"Refusing to use this checkpoint — using rules only."
+            )
+            _model = None
+            return False
+
+        if missing or unexpected:
+            logger.warning(
+                f"Non-critical state dict mismatch (missing: {missing}, unexpected: {unexpected}) — "
+                f"loaded anyway, but verify this checkpoint matches the current architecture."
             )
         else:
-            logger.warning(
-                f"No model.safetensors found at {weights_path} — "
-                f"classification heads are randomly initialized, predictions will be unreliable."
-            )
+            logger.info(f"Loaded full InLegalBERT state dict from {weights_path} with exact key match")
 
         _model.eval()
         _model_loaded = True
@@ -87,6 +106,7 @@ def _load_model():
 
     except Exception as e:
         logger.error(f"Failed to load InLegalBERT: {e}")
+        _model = None
         return False
 
 
