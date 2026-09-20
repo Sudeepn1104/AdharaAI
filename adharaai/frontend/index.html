@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link href="./AdharaAI — Legal Document Simplifier_files/css2" rel="stylesheet">
 <!-- Fonts  -->
-<link rel="stylesheet" href="./themify-icons-font/themify-icons/themify-icons.css">
+<link rel="stylesheet" href="/static/themify-icons-font/themify-icons/themify-icons.css">
 <link rel="stylesheet" href="https://jsdeliver.net/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -148,13 +148,18 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 .action-panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 .ap-head{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border)}
 .ap-head h3{font-family:var(--serif);font-size:1.15rem;color:var(--navy)}
-.action-item{display:flex;gap:12px;padding:1rem 1.5rem;border-bottom:1px solid var(--border);align-items:flex-start}
+.action-item{display:flex;gap:12px;padding:1rem 1.5rem;border-bottom:1px solid var(--border);align-items:flex-start;cursor:pointer}
 .action-item:last-child{border-bottom:none}
-.action-ico{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ai-r{background:var(--red-bg)}
-.ai-a{background:var(--amber-bg)}
-.ai-r i{font-size:14px;color:var(--red)}
-.ai-a i{font-size:14px;color:var(--amber)}
+.action-checkbox{appearance:none;width:28px;height:28px;margin:0;border:1px solid transparent;border-radius:var(--radius-sm);display:grid;place-content:center;flex-shrink:0;cursor:pointer;transition:background .15s,border-color .15s}
+.action-checkbox::after{content:"";width:7px;height:13px;border:solid var(--white);border-width:0 2px 2px 0;opacity:0;transform:rotate(45deg) translate(-1px,-1px)}
+.action-checkbox:checked::after{opacity:1}
+.action-checkbox:focus-visible{outline:3px solid rgba(42,111,188,.35);outline-offset:2px}
+.check-r{background:var(--red-bg)}
+.check-a{background:var(--amber-bg)}
+.check-r:checked{background:var(--red);border-color:var(--red)}
+.check-a:checked{background:var(--amber);border-color:var(--amber)}
+.action-item:has(.action-checkbox:checked) .action-tip{text-decoration:line-through;color:var(--muted)}
+.action-item:has(.action-checkbox:checked) .action-clause{opacity:.7}
 .action-tip{font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:2px}
 .action-clause{font-size:11px;color:var(--muted)}
 
@@ -194,11 +199,11 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
     <div class="card">
       <div class="upload-body">
         <div class="drop-zone" id="drop-zone">
-          <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" aria-label="Upload legal document">
+          <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg,.tiff,.bmp" aria-label="Upload legal document">
           <div class="up-icon"><i class="ti ti-pin" aria-hidden="true"></i></div>
           <div class="up-title">Drag & drop your document here</div>
           <div class="up-sub">or click to browse your files</div>
-          <div class="up-types">PDF · TXT · JPG · PNG — max 10 MB</div>
+          <div class="up-types">PDF · TXT · JPG · PNG · TIFF · BMP — max 10 MB</div>
         </div>
 
         <div class="file-chip" id="file-chip">
@@ -215,7 +220,7 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 
         <label class="consent-row" for="consent-checkbox">
           <input type="checkbox" id="consent-checkbox">
-          <span>I accept the <a href="privacy.html">Privacy and Policy</a>.</span>
+          <span>I accept the <a href="/privacy">Privacy and Policy</a>.</span>
         </label>
 
         <button class="btn-analyze" id="btn-analyze" disabled="">
@@ -277,8 +282,9 @@ nav{background:var(--navy);padding:0 2rem;height:52px;display:flex;align-items:c
 </main>
 
 <script>
-const API='http://127.0.0.1:8000';
+const API=window.location.origin;
 let selectedFile=null;
+let documentToken=null;
 
 const fileInput=document.getElementById('file-input');
 const dropZone=document.getElementById('drop-zone');
@@ -335,6 +341,11 @@ function hideProgress(){progEl.classList.remove('show');progBar.style.width='0%'
 function showErr(msg){errBox.textContent=msg;errBox.classList.add('show');}
 function hideErr(){errBox.classList.remove('show');}
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
+const escapeHtml=value=>{
+  const element=document.createElement('div');
+  element.textContent=value??'';
+  return element.innerHTML;
+};
 
 btnAnalyze.addEventListener('click',async()=>{
   if(!selectedFile)return;
@@ -352,10 +363,15 @@ btnAnalyze.addEventListener('click',async()=>{
     const upRes=await fetch(`${API}/api/upload/`,{method:'POST',body:form});
     if(!upRes.ok){const e=await upRes.json();throw new Error(e.detail||'Upload failed.');}
     const upData=await upRes.json();
+    if(!upData.document_token)throw new Error('Upload succeeded but did not return a document access token.');
+    documentToken=upData.document_token;
     setProgress(50,'Extracting and segmenting clauses…');
     await delay(350);
     setProgress(75,'Flagging risks and simplifying language…');
-    const anRes=await fetch(`${API}/api/analyze/${upData.document_id}`,{method:'POST'});
+    const anRes=await fetch(`${API}/api/analyze/${upData.document_id}`,{
+      method:'POST',
+      headers:{'X-Document-Token':documentToken},
+    });
     if(!anRes.ok){const e=await anRes.json();throw new Error(e.detail||'Analysis failed.');}
     const data=await anRes.json();
     setProgress(100,'Done!');
@@ -384,16 +400,14 @@ function renderResults(data,fname){
   if(flagged.length){
     actionList.innerHTML='';
     flagged.forEach(c=>{
-      const d=document.createElement('div');
+      const d=document.createElement('label');
       d.className='action-item';
       const isH=c.risk_level==='high';
       d.innerHTML=`
-        <div class="action-ico ${isH?'ai-r':'ai-a'}">
-          <i class="ti ${isH?'ti-alert-triangle':'ti-info-circle'}" aria-hidden="true"></i>
-        </div>
+        <input class="action-checkbox ${isH?'check-r':'check-a'}" type="checkbox">
         <div>
-          <div class="action-tip">${c.risk_tip}</div>
-          <div class="action-clause">Clause ${c.number}</div>
+          <div class="action-tip">${escapeHtml(c.risk_tip)}</div>
+          <div class="action-clause">Clause ${escapeHtml(c.number)}</div>
         </div>`;
       actionList.appendChild(d);
     });
@@ -411,13 +425,13 @@ function buildClauseCard(c,idx){
   const barCls=isH?'rb-h':isM?'rb-m':'rb-l';
   const bdgCls=isH?'rb-badge-h':isM?'rb-badge-m':'rb-badge-l';
   const bdgLbl=isH?'High risk':isM?'Review':'Clear';
-  const simplified=c.simplified||c.simplified_text||c.original;
+  const simplified=c.simplified||c.simplified_text||c.original||'Plain-English text is unavailable.';
   const flagHTML=(c.risk_level!=='low'&&c.risk_reason)?`
     <div class="flag-box ${isH?'fb-h':'fb-m'}">
       <i class="ti ${isH?'ti-alert-triangle':'ti-alert-circle'} flag-ico ${isH?'flag-ico-h':'flag-ico-m'}" aria-hidden="true"></i>
       <div>
-        <div class="flag-reason">${c.risk_reason}</div>
-        ${c.risk_tip?`<div class="flag-tip">${c.risk_tip}</div>`:''}
+        <div class="flag-reason">${escapeHtml(c.risk_reason)}</div>
+        ${c.risk_tip?`<div class="flag-tip">${escapeHtml(c.risk_tip)}</div>`:''}
       </div>
     </div>`:'';
   card.innerHTML=`
@@ -431,8 +445,8 @@ function buildClauseCard(c,idx){
         <button class="ctab active" onclick="swTab(this,'sp${idx}','or${idx}')">Plain English</button>
         <button class="ctab" onclick="swTab(this,'or${idx}','sp${idx}')">Original</button>
       </div>
-      <div id="sp${idx}" class="clause-text-view">${simplified}</div>
-      <div id="or${idx}" class="clause-text-view original" style="display:none">${c.original}</div>
+      <div id="sp${idx}" class="clause-text-view">${escapeHtml(simplified)}</div>
+      <div id="or${idx}" class="clause-text-view original" style="display:none">${escapeHtml(c.original||'Original text is unavailable.')}</div>
       ${flagHTML}
     </div>`;
   return card;
@@ -447,6 +461,7 @@ function swTab(btn,showId,hideId){
 
 btnReset.addEventListener('click',()=>{
   selectedFile=null;fileInput.value='';
+  documentToken=null;
   consentCheckbox.checked=false;
   fileChip.classList.remove('show');
   updateAnalyzeState();

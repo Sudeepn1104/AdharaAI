@@ -1,12 +1,13 @@
 fastapi==0.111.0
+starlette==0.37.2
+pydantic==2.13.4
 uvicorn[standard]==0.29.0
 python-multipart==0.0.9
 pdfminer.six==20221105
 PyMuPDF==1.28.0
 pytesseract==0.3.10
-Pillow==10.3.0
-spacy==3.7.4
-sqlalchemy==2.0.30
+Pillow==12.2.0
+sqlalchemy==2.0.51
 python-dotenv==1.0.1
 slowapi==0.1.9
 python-magic==0.4.27
