@@ -6,6 +6,7 @@ test_accuracy.py.
 
 import sys
 import os
+import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.services.risk_flagger import flag_clause
@@ -82,7 +83,7 @@ CASES = [
      "This PG accommodation offers a pro-rated refund for any unused days if the resident vacates early."),
 
     ("admission_of_liability", True,
-     "The respondent hereby acknowledges responsibility for the damage caused to the property."),
+     "The respondent hereby admits liability for the damage in the pending court proceeding."),
     ("admission_of_liability", False,
      "The respondent, without admitting liability, agrees to pay a goodwill sum to resolve the matter."),
 
@@ -140,7 +141,18 @@ def main():
     print(f"  Missed matches  (didn't match when it should): {missed}")
     print(f"Pass rate        : {round(100 * passed / total, 1)}%")
     print("-" * 70)
-
+    
+@pytest.mark.parametrize(
+    "rule_id,expect_match,text",
+    CASES,
+    ids=[f"{c[0]}-{'pos' if c[1] else 'neg'}-{i}" for i, c in enumerate(CASES)],
+)
+def test_rule_case(rule_id, expect_match, text):
+    result = flag_clause(text)
+    matched_ids = [f["id"] for f in result.get("all_flags", [])]
+    assert (rule_id in matched_ids) == expect_match, (
+        f"{rule_id}: expected match={expect_match}, flags matched: {matched_ids}"
+    )
 
 if __name__ == "__main__":
     main()
