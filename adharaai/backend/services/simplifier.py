@@ -120,7 +120,7 @@ SUBSTITUTIONS = [
     (r"\btenancy\s+at\s+will\b",        "a rental arrangement that either party can end at any time"),
     (r"\bquiet\s+enjoyment\b",          "the right to use the property without disturbance from the landlord"),
     (r"\bvacant\s+possession\b",        "the property handed over empty and ready to use"),
-    (r"\bpremises\b",                   "the property"),
+    (r"\bpremises\b",                "property"),
 ]
 
 

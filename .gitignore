@@ -1,4 +1,5 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .env
-adharaai/backend/models/inlegalbert/*.safetensors
+adharaai/backend/models/
+adharaai/Data/p3_documents/
