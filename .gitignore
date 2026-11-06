@@ -1,4 +1,8 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .env
-adharaai/backend/models/inlegalbert/*.safetensors
+adharaai/backend/models/
+adharaai/Data/p3_documents/
+
+# Built model + retrieval index (made in Docker build or by ml/ scripts)
+adharaai/artifacts/

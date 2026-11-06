@@ -248,6 +248,20 @@ def run_simplification_tests():
     print(f"\n  Simplification: {passed}/{len(SIMPLIFICATION_TESTS)} passed")
     return passed / len(SIMPLIFICATION_TESTS)
 
+def test_risk_flagging_meets_targets():
+    m = run_risk_tests()
+    assert m["precision"] >= 0.90, f"precision {m['precision']:.1%} < 90%"
+    assert m["recall"] >= 0.80, f"recall {m['recall']:.1%} < 80%"
+
+
+def test_segmentation():
+    score = run_segmentation_tests()
+    assert score >= 0.80, f"segmentation {score:.1%} < 80%"
+
+
+def test_simplification():
+    score = run_simplification_tests()
+    assert score >= 0.80, f"simplification {score:.1%} < 80%"
 
 if __name__ == "__main__":
     risk_metrics   = run_risk_tests()

@@ -19,6 +19,56 @@ Each rule has:
 import re
 from typing import Optional
 
+# ── Number-word normalization ──────────────────────────────────────────────
+# Converts spelled-out numbers ("ninety days", "twenty-four hours") to
+# digits, purely for rule-matching purposes. Many rules below use \d+
+# patterns and would silently miss word-form numbers without this.
+# NEVER apply this to text shown to the user -- only to the text_lower
+# copy used for regex matching.
+
+_NUMBER_WORDS = {
+    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+    'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19,
+    'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+    'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+}
+_SCALE_WORDS = {'hundred': 100}
+_ALL_NUM_WORDS = set(_NUMBER_WORDS) | set(_SCALE_WORDS) | {'and'}
+_NUM_WORD_ALT = "|".join(sorted(_ALL_NUM_WORDS, key=len, reverse=True))
+_NUMBER_SPAN_RE = re.compile(
+    rf"\b(?:{_NUM_WORD_ALT})(?:[\s-]+(?:{_NUM_WORD_ALT}))*\b",
+    re.IGNORECASE,
+)
+
+
+def _words_to_int(span: str) -> int:
+    tokens = re.split(r"[\s-]+", span.lower())
+    total, current = 0, 0
+    for tok in tokens:
+        if tok == "and":
+            continue
+        elif tok in _SCALE_WORDS:
+            current = (current or 1) * _SCALE_WORDS[tok]
+        elif tok in _NUMBER_WORDS:
+            current += _NUMBER_WORDS[tok]
+    total += current
+    return total
+
+
+def normalize_numbers(text: str) -> str:
+    """Convert spelled-out numbers to digits, for rule-matching only."""
+    def _replace(m):
+        span = m.group(0)
+        value = _words_to_int(span)
+        if value == 0 and span.lower().strip() != "zero":
+            return span
+        return str(value)
+
+    return _NUMBER_SPAN_RE.sub(_replace, text)
+
+
 # ── Rule definitions ──────────────────────────────────────────────────────────
 
 RULES = [
@@ -66,12 +116,12 @@ RULES = [
     },
     {
         "id": "excessive_deposit",
-        "pattern": r"(security|advance)\s+deposit.{0,80}(rs\.?\s*[\d,]+|rupees).{0,20}(month|months)",
+        "pattern": r"(security|advance)\s+deposit.{0,80}([3-9]|[1-9]\d+)\s*(month|months)",
         "level": "medium",
-        "reason": "Verify this deposit amount. Most states cap security deposits at 2–3 months' rent.",
+        "reason": "This security deposit is 3 or more months' rent. Most states cap security deposits at 2 months.",
         "tip": "Check your state's Rent Control Act for the maximum permissible security deposit.",
-        "confidence": 70,
-        "requires_not": []
+        "confidence": 74,
+        "requires_not": [r"two\s+months?|1\s+month|one\s+month"]
     },
     {
         "id": "deposit_forfeiture",
@@ -185,7 +235,9 @@ RULES = [
         "reason": "You are being asked to give up your legal rights to take action.",
         "tip": "Many statutory rights cannot be waived under Indian law. Have a lawyer review this before signing.",
         "confidence": 93,
-        "requires_not": []
+        # Excludes cases already caught more specifically by waiver_all_courts
+        # (named court types), avoiding duplicate flags for the same clause.
+        "requires_not": [r"consumer\s+court|civil\s+court|legal\s+forum|any\s+court|any\s+forum|tribunal"]
     },
     {
         "id": "waiver_of_rent_control",
@@ -497,12 +549,12 @@ RULES = [
 
     {
         "id": "admission_of_liability",
-        "pattern": r"(admit|acknowledge|accept).{0,60}(liability|guilt|fault|responsibility).{0,60}(without\s+prejudice)?",
+        "pattern": r"(admit|acknowledge|accept).{0,40}(liability|guilt|fault).{0,60}(claim|dispute|proceeding|court|lawsuit|allegation)",
         "level": "high",
-        "reason": "This document may contain language where you admit liability or fault — this can be used against you later.",
+        "reason": "This document may contain language where you admit liability or fault in a dispute — this can be used against you later.",
         "tip": "Do not sign any document admitting fault or liability without a lawyer reviewing it first.",
         "confidence": 82,
-        "requires_not": [r"deny|dispute|without\s+admitting"],
+        "requires_not": [r"deny|dispute\s+the|without\s+admitting|for\s+damages\s+caused\s+by\s+them"],
     },
     {
         "id": "ex_parte_risk",
@@ -631,6 +683,53 @@ RULES = [
         "confidence": 91,
         "requires_not": [],
     },
+    # ── HIGH RISK: Court notices ────────────────────────────────────────────
+
+    {
+        "id": "non_appearance_consequence",
+        "pattern": r"(fail(ure)?\s+to\s+appear|non[-\s]?appearance).{0,100}(ex[-\s]?parte|warrant|judgment|decree|proceed)",
+        "level": "high",
+        "reason": "If you don't appear in court as required, the case may proceed without you and a ruling could be made against you.",
+        "tip": "Attend the hearing or send a lawyer on the specified date. Non-appearance can result in an unfavourable ruling without your side being heard.",
+        "confidence": 90,
+        "requires_not": [],
+    },
+    {
+        "id": "property_attachment_risk",
+        "pattern": r"(attach(ment)?|garnishee|seiz(e|ure)).{0,80}(propert(y|ies)|bank\s+account|assets|salary)",
+        "level": "high",
+        "reason": "This notice mentions attachment or seizure of your property, bank accounts, or assets — a serious legal consequence.",
+        "tip": "Consult a lawyer immediately. Attachment orders can freeze your assets before a final judgment is even reached.",
+        "confidence": 89,
+        "requires_not": [],
+    },
+    {
+        "id": "arrest_warrant_mention",
+        "pattern": r"(arrest\s+warrant|non[-\s]?bailable\s+warrant|bailable\s+warrant|warrant\s+of\s+arrest)",
+        "level": "high",
+        "reason": "This notice references an arrest warrant — a serious legal matter requiring immediate attention.",
+        "tip": "Contact a criminal lawyer immediately. Do not ignore any notice mentioning an arrest warrant.",
+        "confidence": 93,
+        "requires_not": [],
+    },
+    {
+        "id": "appeal_deadline_window",
+        "pattern": r"(appeal|revision|review\s+petition).{0,80}(within\s+(\d+)\s+days|limitation\s+period)",
+        "level": "high",
+        "reason": "There is a strict deadline to file an appeal against this order or judgment.",
+        "tip": "Missing the appeal deadline generally forfeits your right to challenge the decision. Consult a lawyer immediately.",
+        "confidence": 87,
+        "requires_not": [],
+    },
+    {
+        "id": "criminal_complaint_notice",
+        "pattern": r"(?=.{0,200}(criminal\s+complaint|\bfir\b|cognizable\s+offence|police\s+station))(?=.{0,200}(summon|notice|appear))",
+        "level": "high",
+        "reason": "This notice relates to a criminal complaint or FIR — this requires more urgent legal attention than a typical civil matter.",
+        "tip": "Consult a criminal lawyer as soon as possible; criminal matters have different procedures and stricter timelines than civil disputes.",
+        "confidence": 88,
+        "requires_not": [],
+    },
 
 ]
 
@@ -681,7 +780,7 @@ def flag_clause(clause_text: str) -> dict:
     Flag a single clause. Returns the highest-risk match found.
     All flags are collected and sorted by confidence.
     """
-    text_lower = clause_text.lower()
+    text_lower = normalize_numbers(clause_text.lower())
     all_flags = []
 
     # Layer 1 & 2: rule-based
@@ -742,3 +841,50 @@ def get_risk_summary(clauses: list) -> dict:
         "avg_confidence":   round(avg_confidence),
         "overall_risk":     "high" if high > 0 else "medium" if medium > 0 else "low",
     }
+
+from backend.services.classifier import classify_clause, is_available as bert_available
+
+
+def flag_clause_hybrid(clause_text: str) -> dict:
+    """
+    Combine rule-based flagging with InLegalBERT classification.
+    Rules catch known bad patterns with full explanations; BERT catches
+    risk that rules miss. If they disagree on risk level, prefer the
+    higher-risk assessment (safer default for the user).
+    """
+    rule_result = flag_clause(clause_text)
+
+    if not bert_available():
+        return {**rule_result, "bert_used": False}
+
+    bert_result = classify_clause(clause_text)
+
+    risk_order = {"low": 0, "medium": 1, "high": 2}
+    rule_level = rule_result["risk_level"]
+    bert_level = bert_result["risk_level"]
+
+    # If BERT sees higher risk than rules did, escalate but keep the rule's
+    # explanation/tip if it has one; otherwise note it's a BERT-only flag.
+    if risk_order.get(bert_level, 0) > risk_order.get(rule_level, 0):
+        return {
+            "risk_level":  bert_level,
+            "risk_reason": rule_result["risk_reason"] or f"Flagged as {bert_level} risk by AI model (clause type: {bert_result['clause_type']}).",
+            "risk_tip":    rule_result["risk_tip"] or "Review this clause carefully; consider asking for clarification or legal advice.",
+            "confidence":  bert_result["risk_confidence"],
+            "all_flags":   rule_result["all_flags"],
+            "bert_used":   True,
+            "bert_clause_type": bert_result["clause_type"],
+        }
+
+    return {
+        **rule_result,
+        "bert_used": True,
+        "bert_clause_type": bert_result["clause_type"],
+        "bert_risk_level": bert_level,
+        "bert_confidence": bert_result["risk_confidence"],
+    }
+
+
+def flag_all_clauses_hybrid(clauses: list) -> list:
+    """Apply hybrid rule+BERT risk flagging to all clauses."""
+    return [{**c, **flag_clause_hybrid(c["text"])} for c in clauses]

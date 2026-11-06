@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.models.database import get_db
+from backend.services import classifier, retriever
 from config import settings
 import psutil, datetime
 
@@ -22,4 +23,7 @@ def health(db: Session = Depends(get_db)):
         "db":        "ok" if db_ok else "error",
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
         "memory_mb": round(psutil.Process().memory_info().rss / 1024 / 1024, 1),
+        # Read-only: never triggers a model load (that would block this check).
+        "classifier": classifier.backend_name(),   # "onnx" | "torch" | "none"
+        "retriever":  "ready" if retriever._loaded else "not_loaded",
     }

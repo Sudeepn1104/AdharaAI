@@ -1,0 +1,19 @@
+# Keep the image small and free of raw documents
+.git
+**/__pycache__
+**/*.pyc
+**/venv
+**/.venv
+**/.env
+**/*.db
+**/.pytest_cache
+adharaai/notebooks
+adharaai/backend/models/inlegalbert
+github_assets
+
+# Raw rental agreements and old dataset versions stay out of the image;
+# only the vetted v3 CSV is needed (for the retrieval index).
+adharaai/Data/*
+!adharaai/Data/adharaai_deployment_ready_v3.csv
+adharaai/batch_test_results.csv
+adharaai_deployment_ready_redacted.csv

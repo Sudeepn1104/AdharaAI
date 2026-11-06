@@ -1,0 +1,23 @@
+fastapi==0.111.0
+starlette==0.37.2
+pydantic==2.13.4
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+pdfminer.six==20221105
+PyMuPDF==1.28.0
+pytesseract==0.3.10
+Pillow==12.2.0
+sqlalchemy==2.0.51
+python-dotenv==1.0.1
+slowapi==0.1.9
+python-magic==0.4.27
+bleach==6.1.0
+aiofiles==23.2.1
+psutil==5.9.8
+psycopg2-binary==2.9.12
+
+# ML inference without PyTorch (ONNX Runtime) - fits Catalyst's 2 GB RAM
+onnxruntime==1.29.0
+tokenizers==0.23.3
+fastembed==0.9.1
+numpy
