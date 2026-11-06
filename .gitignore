@@ -3,3 +3,6 @@ __pycache__/
 .env
 adharaai/backend/models/
 adharaai/Data/p3_documents/
+
+# Built model + retrieval index (made in Docker build or by ml/ scripts)
+adharaai/artifacts/

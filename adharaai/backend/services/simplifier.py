@@ -139,7 +139,25 @@ def simplify_clause(text: str) -> str:
 
 
 def simplify_all_clauses(clauses: list) -> list:
-    """Add simplified_text to each clause dict."""
-    for c in clauses:
-        c["simplified_text"] = simplify_clause(c["text"])
+    """Add simplified_text to each clause dict.
+
+    Retrieval first: if a vetted dataset clause is similar enough, reuse its
+    hand-written explanation (and tip, as retrieved_tip). Otherwise the regex
+    substitution rules above are used. simplifier_source records which path
+    ran ("retrieval" or "regex") for prediction logging.
+    """
+    from backend.services import retriever
+
+    matches = retriever.match_many([c["text"] for c in clauses])
+    for c, m in zip(clauses, matches):
+        if m and m["simplified_text"]:
+            c["simplified_text"] = m["simplified_text"]
+            c["simplifier_source"] = "retrieval"
+        else:
+            c["simplified_text"] = simplify_clause(c["text"])
+            c["simplifier_source"] = "regex"
+        if m:
+            c["retrieval_score"] = m["score"]
+            if m["tip"]:
+                c["retrieved_tip"] = m["tip"]
     return clauses

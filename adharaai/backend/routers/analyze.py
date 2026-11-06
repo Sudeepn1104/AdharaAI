@@ -59,7 +59,8 @@ def analyze_document(
             clause_type=clause.get("bert_clause_type") or clause.get("clause_type"),
             risk_level=clause.get("risk_level", "low"),
             risk_reason=clause.get("risk_reason"),
-            risk_tip=clause.get("risk_tip"),
+            # Rule tip wins; otherwise the vetted tip from the closest dataset clause.
+            risk_tip=clause.get("risk_tip") or clause.get("retrieved_tip"),
             confidence=clause.get("confidence", 100),
         )
         db.add(clause_row)

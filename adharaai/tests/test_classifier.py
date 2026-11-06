@@ -21,6 +21,10 @@ def reset_classifier_state():
     classifier._risk_encoder = None
     classifier._type_encoder = None
     classifier._model_loaded = False
+    classifier._onnx_session = None
+    classifier._onnx_tokenizer = None
+    classifier._labels = None
+    classifier._backend = None
 
 
 MODEL_FILES_PRESENT = os.path.exists(classifier.MODEL_PATH) and os.path.exists(
@@ -32,13 +36,14 @@ def test_nonexistent_model_path_falls_back():
     """No model files at all (e.g. a clean clone) -> must fall back to
     rules, never crash. Needs no files, always runs."""
     reset_classifier_state()
-    real_path = classifier.MODEL_PATH
+    real_path, real_onnx = classifier.MODEL_PATH, classifier.ONNX_PATH
     classifier.MODEL_PATH = real_path + "_does_not_exist"
+    classifier.ONNX_PATH = real_onnx + "_does_not_exist"
 
     result = classifier.classify_clause("Tenant shall pay rent on the 5th of each month.")
     available = classifier.is_available()
 
-    classifier.MODEL_PATH = real_path
+    classifier.MODEL_PATH, classifier.ONNX_PATH = real_path, real_onnx
 
     assert result["source"] == "fallback"
     assert available is False
@@ -60,10 +65,12 @@ def test_missing_safetensors_falls_back():
             if os.path.isfile(src):
                 shutil.copy(src, os.path.join(fake_path, name))
 
+    real_onnx = classifier.ONNX_PATH
+    classifier.ONNX_PATH = real_onnx + "_does_not_exist"
     classifier.MODEL_PATH = fake_path
     result = classifier.classify_clause("Tenant shall pay rent on the 5th of each month.")
     available = classifier.is_available()
-    classifier.MODEL_PATH = real_path
+    classifier.MODEL_PATH, classifier.ONNX_PATH = real_path, real_onnx
     shutil.rmtree(fake_path)
 
     assert result["source"] == "fallback"

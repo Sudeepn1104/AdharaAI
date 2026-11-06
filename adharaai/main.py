@@ -54,12 +54,24 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Auto-wiped raw text from {wiped} expired document(s)")
 
     cleanup_task = asyncio.create_task(privacy_cleanup_loop())
+
+    # Catalyst AppSail kills an instance that isn't listening within 10 s, so
+    # models load in the background AFTER the server starts. Until they are
+    # ready, requests use rules + regex (the existing fail-closed fallback).
+    async def warm_up_models():
+        from backend.services import classifier, retriever
+        bert_ok = await asyncio.to_thread(classifier.is_available)
+        retr_ok = await asyncio.to_thread(retriever.is_available)
+        logger.info(f"Warm-up done: classifier={classifier.backend_name()} ({bert_ok}), retriever={retr_ok}")
+
+    warmup_task = asyncio.create_task(warm_up_models())
     try:
         yield
     finally:
-        cleanup_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await cleanup_task
+        for task in (cleanup_task, warmup_task):
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
         logger.info("AdharaAI shutting down")
 
 
